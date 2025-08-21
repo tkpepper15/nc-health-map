@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Large data files - use Supabase instead
+/data/raw/
+/data/processed/
+*.csv
+*.geojson
+public/*.geojson
+
+# Keep essential data files for fallback (small files only)
+!app/data/
+!data/README.md
