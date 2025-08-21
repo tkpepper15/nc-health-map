@@ -265,9 +265,9 @@ export function getDataLayersByCategory(): Record<string, MetricLayer[]> {
  * Get color for a specific data value in a layer
  * Implements CCVI's perceptually uniform color mapping
  */
-export function getLayerColor(layerId: string, value: number): string {
+export function getLayerColor(layerId: string, value: number | null): string {
   const layer = getDataLayer(layerId);
-  if (!layer) return '#9ca3af'; // Default gray
+  if (!layer || value === null || value === undefined) return '#9ca3af'; // Default gray for null/missing data
   
   const { colors, domain } = layer.colorScale;
   const [min, max] = domain;
@@ -286,7 +286,7 @@ export function getLayerColor(layerId: string, value: number): string {
 /**
  * Extract data value for a specific layer from healthcare metrics
  */
-export function getLayerValue(layerId: string, data: HealthcareMetrics): number {
+export function getLayerValue(layerId: string, data: HealthcareMetrics): number | null {
   switch (layerId) {
     case 'hcvi':
       return data.hcvi.score;
@@ -355,7 +355,7 @@ export function calculateLayerStatistics(
   median: number;
   quartiles: [number, number, number];
 } {
-  const values = data.map(d => getLayerValue(layerId, d)).filter(v => v !== undefined);
+  const values = data.map(d => getLayerValue(layerId, d)).filter((v): v is number => v !== undefined && v !== null);
   const sorted = values.sort((a, b) => a - b);
   const n = sorted.length;
   

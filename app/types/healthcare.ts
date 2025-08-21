@@ -34,47 +34,72 @@ export interface HealthcareMetrics {
   
   // SVI Data
   svi_data?: {
-    fips_code: string;
-    county_name: string;
-    svi_overall_percentile: number;
-    socioeconomic_percentile: number;
-    household_composition_percentile: number;
-    racial_minority_percentile: number;
-    housing_transport_percentile: number;
+    fips_code?: string;
+    county_name?: string;
+    svi_overall_percentile?: number | null;
+    svi_overall_score?: number | null;
+    socioeconomic_percentile?: number | null;
+    household_composition_percentile?: number | null;
+    racial_minority_percentile?: number | null;
+    housing_transport_percentile?: number | null;
+    
+    // Theme 1: Socioeconomic
+    poverty_150_pct?: number | null;
+    unemployment_pct?: number | null;
+    housing_burden_pct?: number | null;
+    no_highschool_pct?: number | null;
+    no_insurance_pct?: number | null;
+    
+    // Theme 2: Household Characteristics  
+    age65_older_pct?: number | null;
+    age17_younger_pct?: number | null;
+    disability_pct?: number | null;
+    single_parent_pct?: number | null;
+    limited_english_pct?: number | null;
+    
+    // Theme 3: Racial & Ethnic Minority
+    minority_pct?: number | null;
+    
+    // Theme 4: Housing & Transportation
+    multiunit_housing_pct?: number | null;
+    mobile_homes_pct?: number | null;
+    crowded_housing_pct?: number | null;
+    no_vehicle_pct?: number | null;
+    group_quarters_pct?: number | null;
   };
   
   // Healthcare Access (33% of HCVI)
   healthcareAccess: {
-    providerDensity: number; // physicians per 10,000 residents
-    geographicAccess: number; // average minutes to hospital
-    specialtyServices: number; // availability score 1-10
-    insuranceCoverage: number; // % insured
-    score: number; // 1-10 composite score
+    providerDensity: number | null; // physicians per 10,000 residents
+    geographicAccess: number | null; // average minutes to hospital
+    specialtyServices: number | null; // availability score 1-10
+    insuranceCoverage: number | null; // % insured
+    score: number | null; // 1-10 composite score
   };
   
   // Policy Risk (33% of HCVI)
   policyRisk: {
-    medicaidDependency: number; // % population on Medicaid expansion
-    federalFundingReliance: number; // % hospital revenue from federal sources
-    snapVulnerability: number; // SNAP participation rate
-    workRequirementImpact: number; // projected coverage losses
-    score: number; // 1-10 composite score
+    medicaidDependency: number | null; // % population on Medicaid expansion
+    federalFundingReliance: number | null; // % hospital revenue from federal sources
+    snapVulnerability: number | null; // SNAP participation rate
+    workRequirementImpact: number | null; // projected coverage losses
+    score: number | null; // 1-10 composite score
   };
   
   // Economic Vulnerability (34% of HCVI)
   economicVulnerability: {
-    hospitalFinancialHealth: number; // operating margin percentile
-    privateEquityExposure: number; // % facilities PE-owned
-    healthcareEmployment: number; // % jobs in healthcare
-    socialDeterminants: number; // poverty/education composite
-    score: number; // 1-10 composite score
+    hospitalFinancialHealth: number | null; // operating margin percentile
+    privateEquityExposure: number | null; // % facilities PE-owned
+    healthcareEmployment: number | null; // % jobs in healthcare
+    socialDeterminants: number | null; // poverty/education composite
+    score: number | null; // 1-10 composite score
   };
   
   // Overall Healthcare Vulnerability Index
   hcvi: {
-    score: number; // 1-10 overall score
-    ranking: number; // 1-100 county ranking
-    category: 'low' | 'moderate' | 'high' | 'extreme';
+    score: number | null; // 1-10 overall score
+    ranking: number | null; // 1-100 county ranking
+    category: 'low' | 'moderate' | 'high' | 'extreme' | 'unknown';
     color: string; // hex color for mapping
   };
 }

@@ -102,7 +102,10 @@ export default function CountyDetailPanel({ county, onClose }: CountyDetailPanel
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium text-orange-900">Overall SVI Percentile</span>
               <span className="text-2xl font-bold text-orange-700">
-                {(county.svi_data.svi_overall_percentile * 100).toFixed(0)}%
+                {county.svi_data.svi_overall_percentile !== null && county.svi_data.svi_overall_percentile !== undefined
+                  ? (county.svi_data.svi_overall_percentile * 100).toFixed(0) + '%'
+                  : 'No Data'
+                }
               </span>
             </div>
             <div className="text-xs text-orange-600">
@@ -115,25 +118,37 @@ export default function CountyDetailPanel({ county, onClose }: CountyDetailPanel
             <div className="flex justify-between p-3 bg-blue-50 rounded border">
               <span className="text-blue-800 font-medium">Theme 1: Socioeconomic Status</span>
               <span className="font-bold text-blue-700">
-                {(county.svi_data.socioeconomic_percentile * 100).toFixed(0)}%
+                {county.svi_data.socioeconomic_percentile !== null && county.svi_data.socioeconomic_percentile !== undefined
+                  ? (county.svi_data.socioeconomic_percentile * 100).toFixed(0) + '%'
+                  : 'No Data'
+                }
               </span>
             </div>
             <div className="flex justify-between p-3 bg-purple-50 rounded border">
               <span className="text-purple-800 font-medium">Theme 2: Household Composition</span>
               <span className="font-bold text-purple-700">
-                {(county.svi_data.household_composition_percentile * 100).toFixed(0)}%
+                {county.svi_data.household_composition_percentile !== null && county.svi_data.household_composition_percentile !== undefined
+                  ? (county.svi_data.household_composition_percentile * 100).toFixed(0) + '%'
+                  : 'No Data'
+                }
               </span>
             </div>
             <div className="flex justify-between p-3 bg-indigo-50 rounded border">
               <span className="text-indigo-800 font-medium">Theme 3: Racial/Ethnic Minority Status</span>
               <span className="font-bold text-indigo-700">
-                {(county.svi_data.racial_minority_percentile * 100).toFixed(0)}%
+                {county.svi_data.racial_minority_percentile !== null && county.svi_data.racial_minority_percentile !== undefined
+                  ? (county.svi_data.racial_minority_percentile * 100).toFixed(0) + '%'
+                  : 'No Data'
+                }
               </span>
             </div>
             <div className="flex justify-between p-3 bg-teal-50 rounded border">
               <span className="text-teal-800 font-medium">Theme 4: Housing & Transportation</span>
               <span className="font-bold text-teal-700">
-                {(county.svi_data.housing_transport_percentile * 100).toFixed(0)}%
+                {county.svi_data.housing_transport_percentile !== null && county.svi_data.housing_transport_percentile !== undefined
+                  ? (county.svi_data.housing_transport_percentile * 100).toFixed(0) + '%'
+                  : 'No Data'
+                }
               </span>
             </div>
           </div>

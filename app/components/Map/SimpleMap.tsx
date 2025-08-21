@@ -170,7 +170,7 @@ export default function SimpleMap({
                       fill="#374151"
                       className="pointer-events-none"
                     >
-                      {healthData.hcvi.score.toFixed(1)}
+                      {healthData.hcvi.score !== null ? healthData.hcvi.score.toFixed(1) : 'N/A'}
                     </text>
                   </g>
                 )}

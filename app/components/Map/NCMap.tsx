@@ -164,7 +164,12 @@ export default function NCMap({
         >
           <h4 className="font-medium text-gray-900">{hoveredCounty.name}</h4>
           <p className="text-sm text-gray-600">
-            HCVI Score: {healthcareData.find(d => d.countyId === hoveredCounty.id)?.hcvi.score.toFixed(1) || 'N/A'}
+            HCVI Score: {(() => {
+              const data = healthcareData.find(d => d.countyId === hoveredCounty.id);
+              return data?.hcvi.score !== null && data?.hcvi.score !== undefined 
+                ? data.hcvi.score.toFixed(1) 
+                : 'N/A';
+            })()}
           </p>
         </div>
       )}

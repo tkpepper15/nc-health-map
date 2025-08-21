@@ -10,6 +10,12 @@ import { HealthcareMetrics } from '../../types/healthcare';
 import { useHealthcareStore } from '../../utils/store';
 import { DataLayer } from '../DataLayers/DataLayerSelector';
 
+interface DataSource {
+  source: 'supabase' | 'local' | 'fallback';
+  lastUpdated: Date | null;
+  error?: string;
+}
+
 interface SidebarProps {
   medicaidEnabled: boolean;
   onMedicaidToggle: (enabled: boolean) => void;
@@ -21,6 +27,7 @@ interface SidebarProps {
   currentLayer?: DataLayer;
   layerStats?: any;
   hospitalsLoading?: boolean;
+  dataSource?: DataSource;
 }
 
 export default function Sidebar({ 

@@ -297,7 +297,7 @@ export default function MapboxMap({
           <div class="space-y-1 text-sm">
             <div class="flex justify-between">
               <span class="text-gray-600">HCVI Score:</span>
-              <span class="font-medium">${healthData?.hcvi.score.toFixed(1) || 'N/A'}</span>
+              <span class="font-medium">${(healthData?.hcvi.score !== null && healthData?.hcvi.score !== undefined) ? healthData.hcvi.score.toFixed(1) : 'N/A'}</span>
             </div>
             <div class="flex justify-between">
               <span class="text-gray-600">Population:</span>

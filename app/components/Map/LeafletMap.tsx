@@ -202,8 +202,8 @@ export default function LeafletMap({
                 const value = getLayerValue(selectedMetric, healthData);
                 layer.bindTooltip(
                   `<strong>${countyName}</strong><br/>
-                   HCVI Score: ${healthData.hcvi.score.toFixed(1)}<br/>
-                   Selected Metric: ${value.toFixed(1)}`,
+                   HCVI Score: ${healthData.hcvi.score !== null ? healthData.hcvi.score.toFixed(1) : 'No Data'}<br/>
+                   Selected Metric: ${value !== null ? value.toFixed(1) : 'No Data'}`,
                   { 
                     permanent: false,
                     direction: 'top',

@@ -101,7 +101,10 @@ export default function CountyHoverPanel({ county }: CountyHoverPanelProps) {
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-medium text-orange-800">Overall SVI Percentile:</span>
               <span className="text-sm font-bold text-orange-700">
-                {(county.svi_data.svi_overall_percentile * 100).toFixed(0)}%
+                {county.svi_data.svi_overall_percentile !== null && county.svi_data.svi_overall_percentile !== undefined
+                  ? (county.svi_data.svi_overall_percentile * 100).toFixed(0) + '%'
+                  : 'No Data'
+                }
               </span>
             </div>
             <div className="text-xs text-orange-600">

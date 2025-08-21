@@ -161,7 +161,7 @@ export default function RealLeafletMap({
             layer.bindPopup(`
               <div class="p-2">
                 <h3 class="font-bold">${countyData.name}</h3>
-                <p>HCVI Score: ${healthData.hcvi.score.toFixed(1)}</p>
+                <p>HCVI Score: ${healthData.hcvi.score !== null ? healthData.hcvi.score.toFixed(1) : 'No Data'}</p>
                 <p>Population: ${countyData.population.toLocaleString()}</p>
                 <p>Classification: ${countyData.classification}</p>
               </div>

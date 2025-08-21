@@ -97,8 +97,8 @@ function transformToUnifiedFormat(rawData: any, source: 'supabase' | 'local'): H
       },
       
       hcvi: {
-        score: rawData.hcvi_composite || 0,
-        ranking: rawData.vulnerability_level || 0,
+        score: getSafeValue(rawData.hcvi_composite),
+        ranking: getSafeValue(rawData.vulnerability_level),
         category: rawData.vulnerability_category || getVulnerabilityCategory(rawData.hcvi_composite),
         color: getVulnerabilityColor(rawData.vulnerability_category || getVulnerabilityCategory(rawData.hcvi_composite))
       }
