@@ -4,19 +4,20 @@ import { useState } from 'react';
 import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
 import MainContent from './components/Layout/MainContent';
-import NCLeafletMapFixed from './components/Map/NCLeafletMapFixed';
+import NCLeafletMap from './components/Map/NCLeafletMap';
 import DataLayerSelector from './components/DataLayers/DataLayerSelector';
 import DataLayerDescription from './components/DataLayers/DataLayerDescription';
 import MetricsPanel from './components/DataLayers/MetricsPanel';
 import DataSourceIndicator from './components/UI/DataSourceIndicator';
 import { useHealthcareStore } from './utils/store';
-import { useUnifiedHealthcareData } from './hooks/useUnifiedHealthcareData';
+import { useOptimizedHealthcareData } from './hooks/useOptimizedHealthcareData';
 import { useUnifiedHospitalData } from './hooks/useUnifiedHospitalData';
 import { County } from './types/healthcare';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'home' | 'index' | 'data' | 'project'>('index');
   const [medicaidEnabled, setMedicaidEnabled] = useState<boolean>(true);
+  const [forceLocalData, setForceLocalData] = useState<boolean>(false);
   
   const {
     selectedCounty,
@@ -26,15 +27,27 @@ export default function Home() {
     setSidebarOpen
   } = useHealthcareStore();
 
-  // Use unified healthcare data with seamless local/Supabase integration
+  // Handle data source toggle
+  const handleDataSourceToggle = () => {
+    setForceLocalData(!forceLocalData);
+    // Trigger data refresh with the toggled source
+    if (refresh) {
+      refresh();
+    }
+    console.log('Toggled data source to:', forceLocalData ? 'Supabase' : 'Local');
+  };
+
+  // Use original optimized healthcare data hook that was working
   const { 
     healthcareData, 
     counties, 
     loading, 
-    error, 
-    dataSource,
-    getCountyDetails 
-  } = useUnifiedHealthcareData();
+    error,
+    lastUpdated,
+    isBackendConnected,
+    getCountyDetails,
+    refresh 
+  } = useOptimizedHealthcareData();
   
   // Use unified hospital data
   const { 
@@ -61,14 +74,19 @@ export default function Home() {
   const selectedCountyData = selectedCounty ? counties.find(c => c.fips === selectedCounty) || null : null;
   const selectedHealthcareData = selectedCounty ? healthcareData.find(h => h.fips_code === selectedCounty) || null : null;
 
-  // Show loading state
+  // Show loading state with debug info
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <h2 className="text-xl font-semibold text-gray-700 mb-2">Loading Healthcare Data</h2>
-          <p className="text-gray-500">Fetching North Carolina healthcare vulnerability data...</p>
+          <p className="text-gray-500">Attempting to connect to Supabase...</p>
+          <div className="mt-4 text-xs text-gray-400">
+            <p>Counties: {counties.length} | Healthcare Data: {healthcareData.length}</p>
+            <p>Connected: {isBackendConnected ? '✅ Supabase' : '📂 Local'}</p>
+            {error && <p className="text-red-500 mt-2">Error: {error}</p>}
+          </div>
         </div>
       </div>
     );
@@ -103,7 +121,11 @@ export default function Home() {
           currentLayer={currentLayer}
           layerStats={getHospitalStats()}
           hospitalsLoading={hospitalsLoading}
-          dataSource={dataSource}
+          dataSource={{
+            source: isBackendConnected ? 'supabase' : 'local',
+            lastUpdated: lastUpdated,
+            error: error || undefined
+          }}
         />
         
         <MainContent
@@ -124,14 +146,13 @@ export default function Home() {
                 />
                 
                 {/* Map Component */}
-                <NCLeafletMapFixed
+                <NCLeafletMap
                   counties={counties}
                   healthcareData={healthcareData}
-                  hospitals={hospitals}
-                  currentLayer={currentLayer}
                   medicaidEnabled={medicaidEnabled}
                   onCountyClick={handleCountyClick}
                   selectedCounty={selectedCountyData}
+                  currentLayer={currentLayer}
                 />
               </div>
             </>
@@ -313,9 +334,11 @@ export default function Home() {
 
       {/* Data Source Indicator */}
       <DataSourceIndicator
-        source={dataSource.source}
-        lastUpdated={dataSource.lastUpdated}
-        error={dataSource.error}
+        source={forceLocalData ? 'local' : (isBackendConnected ? 'supabase' : 'local')}
+        lastUpdated={lastUpdated}
+        error={error || undefined}
+        onSourceToggle={handleDataSourceToggle}
+        isToggleable={true}
       />
     </div>
   );

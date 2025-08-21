@@ -74,8 +74,8 @@ export default function MapLegend({ selectedMetric }: MapLegendProps) {
       { color: '#e5e7eb', label: 'No Data', range: 'N/A' }
     ] as LegendItem[],
     footer: [
-      '🏥 Based on provider density, travel time, insurance coverage',
-      'Higher scores indicate worse access'
+      '📊 Real HCVI component data available',
+      '⚠️ Provider/travel time details: Not available'
     ]
   });
 

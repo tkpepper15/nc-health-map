@@ -153,88 +153,70 @@ export function useUnifiedHealthcareData() {
     lastUpdated: null
   });
 
+  console.log('useUnifiedHealthcareData hook state:', { 
+    loading, 
+    error, 
+    healthcareDataLength: healthcareData.length, 
+    countiesLength: counties.length,
+    dataSource: dataSource.source 
+  });
+
   const fetchUnifiedData = useCallback(async () => {
+    console.log('🚀 Starting fetchUnifiedData...');
     setLoading(true);
     setError(null);
 
     try {
-      // Try Supabase first
-      const response = await fetch('/api/healthcare-data');
+      // TEMPORARILY SKIP SUPABASE - GO DIRECTLY TO LOCAL DATA FOR DEBUGGING
+      console.log('🔧 DEBUG MODE: Skipping Supabase, using local data directly');
       
-      if (response.ok) {
-        const result = await response.json();
-        
-        if (result.data && result.data.length > 0) {
-          console.log('✅ Using Supabase data source:', {
-            count: result.data.length,
-            sample: result.data[0]?.county_name,
-            timestamp: result.metadata?.timestamp
-          });
-
-          // Transform Supabase data to unified format
-          const transformedData = result.data.map((item: any) => 
-            transformToUnifiedFormat(item, 'supabase')
-          );
-
-          setHealthcareData(transformedData);
-          setDataSource({
-            source: 'supabase',
-            lastUpdated: new Date(result.metadata?.timestamp || Date.now())
-          });
-
-          // Load county boundaries
-          const { ncCountiesGeoJSON } = await import('../data/ncCountiesGeoJSON');
-          const countiesData: County[] = ncCountiesGeoJSON.features.map(feature => ({
-            id: feature.properties?.fips || feature.properties?.FIPS || '',
-            name: feature.properties?.NAME || feature.properties?.name || '',
-            fips: feature.properties?.fips || feature.properties?.FIPS || '',
-            geometry: feature.geometry as any,
-            properties: {
-              name: feature.properties?.NAME || feature.properties?.name || '',
-              population: feature.properties?.population || 0,
-              area: feature.properties?.area || 0,
-              classification: (feature.properties?.classification as 'urban' | 'rural' | 'frontier') || 'rural'
-            }
-          }));
-          
-          setCounties(countiesData);
-          return;
-        }
-      }
-
-      // Fallback to local data
-      console.log('⚠️ Falling back to local data');
+      // Load local data directly
+      console.log('📁 Loading local healthcare data...');
       const { mockHealthcareData } = await import('../data/healthcareData');
+      console.log('📁 Loading county GeoJSON data...');
       const { ncCountiesGeoJSON } = await import('../data/ncCountiesGeoJSON');
+      console.log('✅ Local data loaded successfully:', { 
+        healthcareDataLength: mockHealthcareData.length,
+        countiesLength: ncCountiesGeoJSON.features.length 
+      });
 
       // Transform local data (minimal transformation needed)
-      const transformedData = mockHealthcareData.map((item: any) => 
-        transformToUnifiedFormat(item, 'local')
-      );
+      console.log('🔄 Transforming local data, sample item:', mockHealthcareData[0]);
+      const transformedData = mockHealthcareData.map((item: any) => {
+        const transformed = transformToUnifiedFormat(item, 'local');
+        console.log('Transformed item:', { original: item.countyName, transformed: transformed.countyName });
+        return transformed;
+      });
 
+      console.log('📊 Setting healthcare data, count:', transformedData.length);
       setHealthcareData(transformedData);
       setDataSource({
         source: 'local',
         lastUpdated: null
       });
 
-      const countiesData: County[] = ncCountiesGeoJSON.features.map(feature => ({
-        id: feature.properties?.fips || feature.properties?.FIPS || '',
-        name: feature.properties?.NAME || feature.properties?.name || '',
-        fips: feature.properties?.fips || feature.properties?.FIPS || '',
-        geometry: feature.geometry as any,
-        properties: {
-          name: feature.properties?.NAME || feature.properties?.name || '',
-          population: feature.properties?.population || 0,
-          area: feature.properties?.area || 0,
-          classification: (feature.properties?.classification as 'urban' | 'rural' | 'frontier') || 'rural'
-        }
-      }));
+      const countiesData: County[] = ncCountiesGeoJSON.features.map(feature => {
+        const countyFips = feature.properties?.FIPS || feature.properties?.fips || '';
+        const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
+        return {
+          id: fullFips,
+          name: feature.properties?.NAME || feature.properties?.name || feature.properties?.CountyName || '',
+          fips: fullFips,
+          geometry: feature.geometry as any,
+          properties: {
+            name: feature.properties?.NAME || feature.properties?.name || '',
+            population: feature.properties?.population || 0,
+            area: feature.properties?.area || 0,
+            classification: (feature.properties?.classification as 'urban' | 'rural' | 'frontier') || 'rural'
+          }
+        };
+      });
       
       setCounties(countiesData);
 
     } catch (err) {
-      console.error('Failed to fetch healthcare data:', err);
+      console.error('❌ CRITICAL ERROR in fetchUnifiedData:', err);
+      console.error('Error stack:', err instanceof Error ? err.stack : 'No stack');
       setError(err instanceof Error ? err.message : 'Failed to load data');
       setDataSource({
         source: 'fallback',
@@ -242,14 +224,49 @@ export function useUnifiedHealthcareData() {
         error: err instanceof Error ? err.message : 'Unknown error'
       });
     } finally {
+      console.log('🏁 FINALLY BLOCK: Setting loading to false');
       setLoading(false);
     }
   }, []);
 
   // Initial data fetch
   useEffect(() => {
+    console.log('🚀 useEffect triggered - starting data fetch');
     fetchUnifiedData();
   }, [fetchUnifiedData]);
+
+  // EMERGENCY FALLBACK - Force load data after timeout
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading && healthcareData.length === 0) {
+        console.log('⚠️ EMERGENCY FALLBACK: Loading taking too long, forcing simple data load');
+        const loadFallbackData = async () => {
+          try {
+            const { mockHealthcareData } = await import('../data/healthcareData');
+            const { ncCountiesGeoJSON } = await import('../data/ncCountiesGeoJSON');
+            
+            const transformedData = mockHealthcareData.slice(0, 10).map((item: any) => transformToUnifiedFormat(item, 'local'));
+            setHealthcareData(transformedData);
+            setCounties(ncCountiesGeoJSON.features.slice(0, 10).map(f => ({
+              id: `37${f.properties.FIPS}`,
+              name: f.properties.NAME,
+              fips: `37${f.properties.FIPS}`,
+              geometry: f.geometry as any,
+              properties: { name: f.properties.NAME, population: 0, area: 0, classification: 'rural' as const }
+            })));
+            setLoading(false);
+            console.log('✅ Emergency fallback data loaded');
+          } catch (e) {
+            console.error('❌ Emergency fallback failed:', e);
+            setLoading(false);
+          }
+        };
+        loadFallbackData();
+      }
+    }, 3000); // 3 second timeout
+
+    return () => clearTimeout(timer);
+  }, [loading, healthcareData.length]);
 
   // Get county details by FIPS
   const getCountyDetails = useCallback((fips: string) => {

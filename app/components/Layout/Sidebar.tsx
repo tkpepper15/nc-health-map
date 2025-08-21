@@ -86,6 +86,7 @@ export default function Sidebar({
               <CountyDetailPanel 
                 county={selectedCounty}
                 onClose={onCountyDeselect}
+                currentLayer={currentLayer}
               />
             )}
             

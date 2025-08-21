@@ -7,6 +7,7 @@ import MapLegend from './MapLegend';
 import HoverInfo from './HoverInfo';
 import HospitalLayer from './HospitalLayer';
 import { DataLayer } from '../DataLayers/DataLayerSelector';
+import styles from './NCMap.module.css';
 
 // Dynamic import for Leaflet to avoid SSR issues
 let L: any = null;
@@ -52,6 +53,7 @@ export default function NCLeafletMapFixed({
   onCountyClick,
   selectedCounty
 }: NCLeafletMapProps) {
+  
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const geoJsonLayerRef = useRef<any>(null);
@@ -225,53 +227,76 @@ export default function NCLeafletMapFixed({
 
     return {
       fillColor,
-      weight: 1,
+      weight: 1.5, // Slightly thicker borders
       opacity: 1,
-      color: '#ffffff',
-      fillOpacity
+      color: '#ffffff', // White county borders
+      fillOpacity,
+      className: 'county-boundary' // Custom class for styling
     };
   }, [healthcareDataMap, medicaidEnabled, currentLayer]);
 
+  // Track component mount status
+  const mountedRef = useRef(true);
+
   // Initialize map only once
   useEffect(() => {
-    let mounted = true;
-
     const initializeMap = async () => {
       try {
         // Dynamic import Leaflet
         const leaflet = await import('leaflet');
         L = leaflet.default;
 
-        // Fix for default markers
-        delete (L.Icon.Default.prototype as any)._getIconUrl;
-        L.Icon.Default.mergeOptions({
-          iconRetinaUrl: '/leaflet/marker-icon-2x.png',
-          iconUrl: '/leaflet/marker-icon.png',
-          shadowUrl: '/leaflet/marker-shadow.png',
-        });
+        // Fix for default markers (not needed for this map, but good practice)
+        try {
+          delete (L.Icon.Default.prototype as any)._getIconUrl;
+          L.Icon.Default.mergeOptions({
+            iconRetinaUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAApCAYAAADAk4LOAAAFgUlEQVR4Aa1XA5BjWRTN2oW17d3YaZtr2962HUzbXNfN1+3951TXXVBBENfrLFriEwAYQAoAX3O/AACAG3xGAAAoACfwAAAoAAHrAQAAOAAAUAAAOwACABZmAwDAOgACdAA80ADhIAB0AUC8ADAA3NWKAACAPQC8Hd7I',
+            iconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAApCAYAAADAk4LOAAAFgUlEQVR4Aa1XA5BjWRTN2oW17d3YaZtr2962HUzbXNfN1+3951TXXVBBENfrLFriEwAYQAoAX3O/AACAG3xGAAAoACfwAAAoAAHrAQAAOAAAUAAAOwACABZmAwDAOgACdAA80ADhIAB0AUC8ADAA3NWKAACAPQC8Hd7I',
+            shadowUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACkAAAApCAQAAAACach9AAACMUlEQVR4Ae3ShY7jQBCF4deScrEqpKihjGxjG2O7yPYytrExsrGxsbGxsrGxsY2NjWzMObeFH6jXX5'
+          });
+        } catch (e) {
+          // Ignore marker icon errors since we don't use markers
+        }
 
         // Load county boundaries
         const { ncCountiesGeoJSON } = await import('../../data/ncCountiesGeoJSON');
         
-        if (!mounted) return;
+        if (!mountedRef.current) return;
 
         // Create map only once
         if (!mapRef.current && mapContainer.current) {
           mapRef.current = L.map(mapContainer.current, {
-            center: [35.7596, -79.0193],
+            center: [35.5, -79.4], // Optimally centered on NC
             zoom: 7,
             minZoom: 6,
-            maxZoom: 12,
+            maxZoom: 11,
             zoomControl: true,
             scrollWheelZoom: true,
-            attributionControl: true
+            doubleClickZoom: true,
+            attributionControl: false,
+            zoomAnimation: true,
+            fadeAnimation: true,
+            preferCanvas: true // Better performance for lots of polygons
           });
 
-          // Add base layer
+          // Add optimized base layer for areas outside NC
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors',
-            maxZoom: 18
+            maxZoom: 11, // Match map max zoom
+            minZoom: 6,  // Match map min zoom
+            opacity: 0.2, // Very muted for background
+            className: 'grayscale-map',
+            keepBuffer: 2, // Reduce tile buffer for performance
+            maxNativeZoom: 11, // Prevent loading unnecessary high-zoom tiles
+            updateWhenIdle: true, // Only update when user stops interacting
+            updateWhenZooming: false, // Don't update during zoom animation
+            bounds: [
+              [33.0, -85.0], // Southwest corner (roughly NC area)
+              [37.0, -75.0]  // Northeast corner
+            ]
           }).addTo(mapRef.current);
+
+          // CSS styling is now handled by the CSS module
 
           // Create county layer
           geoJsonLayerRef.current = L.geoJSON(ncCountiesGeoJSON, {
@@ -279,6 +304,16 @@ export default function NCLeafletMapFixed({
             onEachFeature: (feature: any, layer: any) => {
               const fips = feature.properties.fips || feature.properties.FIPS;
               const countyName = feature.properties.NAME || feature.properties.name;
+              const healthData = healthcareDataMap.get(fips);
+              
+              // Add accessibility attributes
+              layer.options.role = 'button';
+              layer.options.tabindex = 0;
+              layer.options['aria-label'] = `${countyName} County. ${
+                healthData?.hcvi_composite ? 
+                `Healthcare vulnerability score: ${healthData.hcvi_composite.toFixed(1)}` : 
+                'No healthcare data available'
+              }. Click to view details.`;
               
               layer.on({
                 mouseover: (e: any) => {
@@ -292,11 +327,17 @@ export default function NCLeafletMapFixed({
                 click: () => {
                   const county = countyMap.get(fips);
                   onCountyClick(county || null);
+                },
+                keydown: (e: any) => {
+                  if (e.originalEvent.key === 'Enter' || e.originalEvent.key === ' ') {
+                    e.originalEvent.preventDefault();
+                    const county = countyMap.get(fips);
+                    onCountyClick(county || null);
+                  }
                 }
               });
 
-              // Enhanced popup with real data
-              const healthData = healthcareDataMap.get(fips);
+              // Enhanced popup with real data  
               const sviData = healthData?.svi_data;
               
               // Data available for popup display
@@ -389,10 +430,35 @@ export default function NCLeafletMapFixed({
             }
           }).addTo(mapRef.current);
 
-          // Fit bounds
+          // Fit bounds to North Carolina with optimal padding
           mapRef.current.fitBounds(geoJsonLayerRef.current.getBounds(), {
-            padding: [20, 20]
+            padding: [30, 30], // More padding for better framing
+            maxZoom: 8 // Don't zoom in too much initially
           });
+
+          // Add prominent North Carolina state boundary
+          const stateOutline = L.geoJSON(ncCountiesGeoJSON, {
+            style: {
+              fillColor: 'transparent',
+              color: '#1f2937', // Dark border to define NC
+              weight: 4,
+              opacity: 1,
+              fillOpacity: 0,
+              dashArray: '0', // Solid line
+              lineCap: 'round',
+              lineJoin: 'round'
+            },
+            interactive: false
+          }).addTo(mapRef.current);
+
+          // Restrict map to North Carolina area
+          const bounds = geoJsonLayerRef.current.getBounds();
+          const restrictedBounds = bounds.pad(0.05); // Minimal padding
+          mapRef.current.setMaxBounds(restrictedBounds);
+          
+          // Set zoom constraints specifically for NC
+          mapRef.current.setMinZoom(6);
+          mapRef.current.setMaxZoom(11);
 
           setMapLoaded(true);
         }
@@ -405,7 +471,7 @@ export default function NCLeafletMapFixed({
     initializeMap();
 
     return () => {
-      mounted = false;
+      mountedRef.current = false;
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -423,6 +489,27 @@ export default function NCLeafletMapFixed({
       });
     }
   }, [medicaidEnabled, currentLayer, getCountyStyle, mapLoaded]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+      if (mapRef.current) {
+        // Clean up all layers and event listeners
+        mapRef.current.eachLayer((layer: any) => {
+          if (layer.off) {
+            layer.off();
+          }
+          mapRef.current?.removeLayer(layer);
+        });
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+      if (geoJsonLayerRef.current) {
+        geoJsonLayerRef.current = null;
+      }
+    };
+  }, []);
 
   if (mapError) {
     return (
@@ -451,12 +538,14 @@ export default function NCLeafletMapFixed({
   } : null;
 
   return (
-    <div className="w-full h-full relative overflow-hidden">
-      {/* Map Container */}
+    <div className="w-full h-full relative">
+      {/* Map Container - Optimized for North Carolina */}
       <div 
         ref={mapContainer} 
-        className="w-full h-full"
-        style={{ minHeight: '400px' }}
+        className={styles.mapContainer}
+        role="application"
+        aria-label="Interactive map of North Carolina showing healthcare vulnerability data by county"
+        tabIndex={0}
       />
 
       {/* Loading overlay */}

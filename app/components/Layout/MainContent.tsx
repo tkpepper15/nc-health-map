@@ -41,9 +41,9 @@ export default function MainContent({ children, sidebarOpen, onSidebarToggle }: 
         </button>
       </div>
 
-      {/* Main content area */}
-      <main className="flex-1 relative w-full overflow-hidden">
-        <div className="h-full w-full lg:h-[calc(100vh-64px)] h-[calc(100vh-128px)]">
+      {/* Main content area - Optimized for map display */}
+      <main className="flex-1 relative w-full overflow-hidden bg-slate-50">
+        <div className="h-full w-full">
           {children}
         </div>
       </main>

@@ -3,26 +3,73 @@
 import { useState, useEffect, useCallback } from 'react';
 import { HealthcareMetrics, County } from '../types/healthcare';
 
-// Transform backend data to match frontend interface - REAL DATA ONLY
+// Transform backend data to match frontend interface - REAL DATA ONLY, NO DUMMY VALUES
 function transformBackendData(backendItem: any): HealthcareMetrics {
+  // Only use real population data, no defaults
+  const totalPopulation = backendItem.total_population || backendItem.population_2020;
+  const medicaidRate = backendItem.medicaid_enrollment_rate;
+  
+  // Only calculate Medicaid totals if we have BOTH population and rate
+  let medicaidTotalEnrollment = null;
+  let medicaidExpansionEnrollment = null;
+  let medicaidTraditionalEnrollment = null;
+  
+  if (totalPopulation && medicaidRate) {
+    medicaidTotalEnrollment = Math.round(totalPopulation * (medicaidRate / 100));
+    // Only estimate splits if we have total - otherwise show N/A
+    medicaidExpansionEnrollment = null; // We don't have real expansion/traditional split data
+    medicaidTraditionalEnrollment = null;
+  }
+  
   return {
     countyId: backendItem.fips_code,
     countyName: backendItem.county_name || backendItem.countyName,
     fips_code: backendItem.fips_code,
     
-    // Real Medicaid data from CSV
-    medicaid_enrollment_rate: backendItem.medicaid_enrollment_rate,
-    medicaid_dependency_ratio: backendItem.medicaid_dependency || backendItem.medicaid_dependency_ratio,
-    medicaid_total_enrollment: backendItem.medicaid_total_enrollment || backendItem.total_population * (backendItem.medicaid_enrollment_rate / 100),
-    medicaid_expansion_enrollment: backendItem.medicaid_expansion_enrollment,
-    medicaid_traditional_enrollment: backendItem.medicaid_traditional_enrollment,
+    // Real Medicaid data from database - no dummy values
+    medicaid_enrollment_rate: backendItem.medicaid_enrollment_rate || null,
+    medicaid_dependency_ratio: backendItem.medicaid_dependency || null, // Use real field, not calculated
+    medicaid_total_enrollment: medicaidTotalEnrollment,
+    medicaid_expansion_enrollment: null, // No real data available
+    medicaid_traditional_enrollment: null, // No real data available
     
-    // Real demographic data
-    population_2020: backendItem.population_2020,
-    is_rural: backendItem.is_rural,
+    // Real demographic data only
+    population_2020: backendItem.total_population || backendItem.population_2020 || null,
+    is_rural: backendItem.is_rural, // Use actual field, don't calculate
     
-    // Real SVI data from CDC
-    svi_data: backendItem.svi_data,
+    // Transform SVI data structure
+    svi_data: {
+      svi_overall_percentile: backendItem.svi_overall_rank,
+      svi_overall_score: backendItem.svi_overall_score,
+      socioeconomic_percentile: backendItem.svi_theme1_rank,
+      household_composition_percentile: backendItem.svi_theme2_rank,
+      racial_minority_percentile: backendItem.svi_theme3_rank,
+      housing_transport_percentile: backendItem.svi_theme4_rank,
+      
+      // Theme 1: Socioeconomic
+      poverty_150_pct: backendItem.svi_poverty_150_pct || 0,
+      unemployment_pct: backendItem.svi_unemployment_pct || 0,
+      housing_burden_pct: backendItem.svi_housing_burden_pct || 0,
+      no_highschool_pct: backendItem.svi_no_highschool_pct || 0,
+      no_insurance_pct: backendItem.svi_no_insurance_pct || 0,
+      
+      // Theme 2: Household
+      age65_older_pct: backendItem.svi_age65_older_pct || 0,
+      age17_younger_pct: backendItem.svi_age17_younger_pct || 0,
+      disability_pct: backendItem.svi_disability_pct || 0,
+      single_parent_pct: backendItem.svi_single_parent_pct || 0,
+      limited_english_pct: backendItem.svi_limited_english_pct || 0,
+      
+      // Theme 3: Racial & Ethnic Minority
+      minority_pct: backendItem.svi_minority_pct || 0,
+      
+      // Theme 4: Housing & Transportation
+      multiunit_housing_pct: backendItem.svi_multiunit_housing_pct || 0,
+      mobile_homes_pct: backendItem.svi_mobile_homes_pct || 0,
+      crowded_housing_pct: backendItem.svi_crowded_housing_pct || 0,
+      no_vehicle_pct: backendItem.svi_no_vehicle_pct || 0,
+      group_quarters_pct: backendItem.svi_group_quarters_pct || 0
+    },
     
     // Use real HCVI scores from Supabase database
     vulnerability_category: backendItem.vulnerability_category || getVulnerabilityCategory(backendItem.hcvi_composite),
@@ -32,33 +79,33 @@ function transformBackendData(backendItem: any): HealthcareMetrics {
     healthcare_access_score: backendItem.healthcare_access_score,
     economic_vulnerability_score: backendItem.economic_vulnerability_score,
     
-    // Use real nested structures from Supabase data
+    // Create nested structures with ONLY real data - no dummy values
     healthcareAccess: {
-      providerDensity: backendItem.physician_density || 0,
-      geographicAccess: backendItem.hospital_access_score || 0,
-      specialtyServices: backendItem.travel_time_to_hospital || 0,
-      insuranceCoverage: (100 - (backendItem.uninsured_rate || 0)),
-      score: backendItem.healthcare_access_score || 0
+      providerDensity: backendItem.physician_density, // null in database
+      geographicAccess: backendItem.travel_time_to_hospital, // null in database  
+      specialtyServices: backendItem.hospital_access_score, // null in database
+      insuranceCoverage: backendItem.uninsured_rate ? (100 - backendItem.uninsured_rate) : null,
+      score: backendItem.healthcare_access_score
     },
     policyRisk: {
-      medicaidDependency: backendItem.medicaid_dependency || 0,
-      federalFundingReliance: backendItem.federal_funding_reliance || 0,
-      snapVulnerability: backendItem.snap_participation_rate || 0,
-      workRequirementImpact: backendItem.work_requirement_impact || 0,
-      score: backendItem.policy_risk_score || 0
+      medicaidDependency: backendItem.medicaid_dependency, // null in database
+      federalFundingReliance: backendItem.federal_funding_reliance, // null in database
+      snapVulnerability: backendItem.snap_participation_rate, // null in database
+      workRequirementImpact: backendItem.work_requirement_impact, // null in database
+      score: backendItem.policy_risk_score
     },
     economicVulnerability: {
-      hospitalFinancialHealth: backendItem.hospital_financial_health || 0,
-      privateEquityExposure: backendItem.private_equity_exposure || 0,
-      healthcareEmployment: backendItem.healthcare_employment_pct || 0,
-      socialDeterminants: backendItem.poverty_rate || 0,
-      score: backendItem.economic_vulnerability_score || 0
+      hospitalFinancialHealth: null, // Not in database
+      privateEquityExposure: null, // Not in database
+      healthcareEmployment: backendItem.healthcare_employment_pct, // null in database
+      socialDeterminants: backendItem.poverty_150_rate,
+      score: backendItem.economic_vulnerability_score
     },
     hcvi: {
-      score: backendItem.hcvi_composite || 0,
-      ranking: backendItem.vulnerability_level || 0,
-      category: backendItem.vulnerability_category || getVulnerabilityCategory(backendItem.hcvi_composite),
-      color: getVulnerabilityColor(backendItem.vulnerability_category || getVulnerabilityCategory(backendItem.hcvi_composite))
+      score: backendItem.hcvi_composite,
+      ranking: backendItem.vulnerability_level, // null in database
+      category: backendItem.vulnerability_category,
+      color: backendItem.vulnerability_category ? getVulnerabilityColor(backendItem.vulnerability_category) : '#e5e7eb'
     }
   };
 }
@@ -146,76 +193,84 @@ export function useOptimizedHealthcareData() {
     try {
       setLoading(true);
       
-      // Try backend API first
+      // Try Supabase API first (prioritize real data)
+      console.log('🔄 Attempting to connect to Supabase backend...');
       try {
-        const healthcareRes = await fetch('/api/healthcare-data'); // Get full data, not aggregated
+        const healthcareRes = await fetch('/api/healthcare-data');
 
         if (healthcareRes.ok) {
           const response = await healthcareRes.json();
-          const backendData = response.data; // Extract data from API response
+          const backendData = response.data;
           
-          console.log('✅ Using real processed data from backend:', {
-            count: backendData.length,
-            sample: backendData[0],
-            sampleKeys: Object.keys(backendData[0] || {}),
-            timestamp: response.metadata?.timestamp
-          });
-          
-          console.log('✅ Real data loaded from backend:', {
-            count: backendData.length,
-            sampleCounty: backendData[0]?.countyName,
-            sampleMedicaid: backendData[0]?.medicaid_total_enrollment,
-            hasSVIData: !!backendData[0]?.svi_data
-          });
+          if (backendData && backendData.length > 0) {
+            console.log('✅ Successfully connected to Supabase! Using real data:', {
+              count: backendData.length,
+              sampleCounty: backendData[0]?.county_name || backendData[0]?.countyName,
+              timestamp: response.metadata?.timestamp || new Date().toISOString()
+            });
 
-          // Transform backend data to match frontend interface
-          const healthcareData = backendData.map((item: any) => transformBackendData(item));
+            // Transform backend data to match frontend interface
+            const healthcareData = backendData.map((item: any) => transformBackendData(item));
 
           // Load county boundaries from GeoJSON 
           const { ncCountiesGeoJSON } = await import('../data/ncCountiesGeoJSON');
           
-          const countiesData: County[] = ncCountiesGeoJSON.features.map(feature => ({
-            id: feature.properties?.fips || feature.properties?.FIPS || '',
-            name: feature.properties?.NAME || feature.properties?.name || '',
-            fips: feature.properties?.fips || feature.properties?.FIPS || '',
-            geometry: feature.geometry as any,
-            properties: {
-              name: feature.properties?.NAME || feature.properties?.name || '',
-              population: feature.properties?.population || 0,
-              area: feature.properties?.area || 0,
-              classification: (feature.properties?.classification as 'urban' | 'rural' | 'frontier') || 'rural'
-            }
-          }));
+          const countiesData: County[] = ncCountiesGeoJSON.features.map(feature => {
+            const countyFips = feature.properties?.FIPS || feature.properties?.fips || '';
+            const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
+            return {
+              id: fullFips,
+              name: feature.properties?.NAME || feature.properties?.name || feature.properties?.CountyName || '',
+              fips: fullFips,
+              geometry: feature.geometry as any,
+              properties: {
+                name: feature.properties?.NAME || feature.properties?.name || '',
+                population: feature.properties?.population || 0,
+                area: feature.properties?.area || 0,
+                classification: (feature.properties?.classification as 'urban' | 'rural' | 'frontier') || 'rural'
+              }
+            };
+          });
 
-          setData(prev => ({
-            healthcareData,
-            counties: countiesData,
-            lastUpdated: new Date(),
-            updateInProgress: prev.updateInProgress
-          }));
-          setError(null);
-          return;
+            setData(prev => ({
+              healthcareData,
+              counties: countiesData,
+              lastUpdated: new Date(response.metadata?.timestamp || Date.now()),
+              updateInProgress: prev.updateInProgress
+            }));
+            setError(null);
+            setLoading(false);
+            return;
+          }
         }
+        
+        // If we get here, API responded but had no data
+        console.log('⚠️ Supabase API responded but returned no data');
       } catch (apiError) {
-        console.warn('Backend API not available, falling back to local data:', apiError);
+        console.log('⚠️ Supabase connection failed:', apiError);
+        console.log('📂 Falling back to local data for development...');
       }
 
       // Fallback to local data
       const { mockHealthcareData } = await import('../data/healthcareData');
       const { ncCountiesGeoJSON } = await import('../data/ncCountiesGeoJSON');
       
-      const countiesData: County[] = ncCountiesGeoJSON.features.map(feature => ({
-        id: feature.properties?.fips || feature.properties?.FIPS || '',
-        name: feature.properties?.NAME || feature.properties?.name || '',
-        fips: feature.properties?.fips || feature.properties?.FIPS || '',
-        geometry: feature.geometry as any,
-        properties: {
-          name: feature.properties?.NAME || feature.properties?.name || '',
-          population: feature.properties?.population || 0,
-          area: feature.properties?.area || 0,
-          classification: (feature.properties?.classification as 'urban' | 'rural' | 'frontier') || 'rural'
-        }
-      }));
+      const countiesData: County[] = ncCountiesGeoJSON.features.map(feature => {
+        const countyFips = feature.properties?.FIPS || feature.properties?.fips || '';
+        const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
+        return {
+          id: fullFips,
+          name: feature.properties?.NAME || feature.properties?.name || feature.properties?.CountyName || '',
+          fips: fullFips,
+          geometry: feature.geometry as any,
+          properties: {
+            name: feature.properties?.NAME || feature.properties?.name || '',
+            population: feature.properties?.population || 0,
+            area: feature.properties?.area || 0,
+            classification: (feature.properties?.classification as 'urban' | 'rural' | 'frontier') || 'rural'
+          }
+        };
+      });
 
       console.log('⚠️ Using fallback mock data');
       

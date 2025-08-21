@@ -4,9 +4,11 @@ interface DataSourceIndicatorProps {
   source: 'supabase' | 'local' | 'fallback';
   lastUpdated: Date | null;
   error?: string;
+  onSourceToggle?: () => void;
+  isToggleable?: boolean;
 }
 
-export default function DataSourceIndicator({ source, lastUpdated, error }: DataSourceIndicatorProps) {
+export default function DataSourceIndicator({ source, lastUpdated, error, onSourceToggle, isToggleable = false }: DataSourceIndicatorProps) {
   const getIndicatorConfig = () => {
     switch (source) {
       case 'supabase':
@@ -37,7 +39,13 @@ export default function DataSourceIndicator({ source, lastUpdated, error }: Data
   const config = getIndicatorConfig();
 
   return (
-    <div className={`fixed bottom-4 right-4 z-40 px-3 py-2 rounded-lg border ${config.color} shadow-lg`}>
+    <div 
+      className={`fixed bottom-4 right-4 z-40 px-3 py-2 rounded-lg border ${config.color} shadow-lg ${
+        isToggleable ? 'cursor-pointer hover:shadow-xl transition-shadow' : ''
+      }`}
+      onClick={isToggleable ? onSourceToggle : undefined}
+      title={isToggleable ? 'Click to toggle data source' : undefined}
+    >
       <div className="flex items-center space-x-2">
         <span className="text-sm">{config.icon}</span>
         <div className="text-xs">
@@ -46,6 +54,11 @@ export default function DataSourceIndicator({ source, lastUpdated, error }: Data
           {lastUpdated && (
             <div className="opacity-60 mt-1">
               Updated: {lastUpdated.toLocaleTimeString()}
+            </div>
+          )}
+          {isToggleable && (
+            <div className="opacity-50 text-xs mt-1">
+              Click to toggle
             </div>
           )}
         </div>
