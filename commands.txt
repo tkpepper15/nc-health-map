@@ -1,0 +1,6 @@
+cd backend && python app/main.py
+
+npm run dev
+
+jC9DQkquv4ZhmBG6vxXU
+

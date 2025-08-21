@@ -1,0 +1,189 @@
+'use client';
+
+import { DataLayer } from '../DataLayers/DataLayerSelector';
+
+interface MapLegendProps {
+  selectedMetric: DataLayer;
+}
+
+interface LegendItem {
+  color: string;
+  label: string;
+  range: string;
+  shape?: 'circle' | 'square' | 'area';
+}
+
+export default function MapLegend({ selectedMetric }: MapLegendProps) {
+  const getMedicaidLegend = () => ({
+    title: 'Medicaid Enrollment Rate',
+    subtitle: 'Percentage of population enrolled (June 2025)',
+    items: [
+      { color: '#1e40af', label: 'Very High', range: '≥ 50%' },
+      { color: '#3b82f6', label: 'High', range: '30-49%' },
+      { color: '#60a5fa', label: 'Moderate', range: '15-29%' },
+      { color: '#93c5fd', label: 'Low', range: '5-14%' },
+      { color: '#dbeafe', label: 'Very Low', range: '< 5%' },
+      { color: '#e5e7eb', label: 'No Data', range: 'N/A' }
+    ] as LegendItem[],
+    footer: [
+      '📊 Toggle shows SVI overlay (red/orange)',
+      'Click counties for detailed breakdown'
+    ]
+  });
+
+  const getSVILegend = () => ({
+    title: 'Social Vulnerability Index',
+    subtitle: 'CDC SVI percentile ranking (2022)',
+    items: [
+      { color: '#dc2626', label: 'High Vulnerability', range: '≥ 75th %ile' },
+      { color: '#f97316', label: 'Moderate-High', range: '50-74th %ile' },
+      { color: '#fbbf24', label: 'Moderate-Low', range: '25-49th %ile' },
+      { color: '#22c55e', label: 'Low Vulnerability', range: '< 25th %ile' },
+      { color: '#e5e7eb', label: 'No Data', range: 'N/A' }
+    ] as LegendItem[],
+    footer: [
+      '🏘️ Higher percentile = more vulnerable',
+      'Based on socioeconomic, demographic factors'
+    ]
+  });
+
+  const getHCVILegend = () => ({
+    title: 'Healthcare Vulnerability Index',
+    subtitle: 'Composite HCVI score (1-10 scale)',
+    items: [
+      { color: '#dc2626', label: 'Extreme Risk', range: '≥ 7.5' },
+      { color: '#ef4444', label: 'High Risk', range: '5.5-7.4' },
+      { color: '#f59e0b', label: 'Moderate Risk', range: '3.5-5.4' },
+      { color: '#22c55e', label: 'Low Risk', range: '< 3.5' },
+      { color: '#e5e7eb', label: 'No Data', range: 'N/A' }
+    ] as LegendItem[],
+    footer: [
+      '🎯 Combines healthcare access, policy risk, economic factors',
+      'Higher scores indicate greater vulnerability'
+    ]
+  });
+
+  const getHealthcareAccessLegend = () => ({
+    title: 'Healthcare Access Score',
+    subtitle: 'Provider availability and accessibility',
+    items: [
+      { color: '#dc2626', label: 'Poor Access', range: '≥ 7.0' },
+      { color: '#f97316', label: 'Limited Access', range: '5.0-6.9' },
+      { color: '#fbbf24', label: 'Moderate Access', range: '3.0-4.9' },
+      { color: '#22c55e', label: 'Good Access', range: '< 3.0' },
+      { color: '#e5e7eb', label: 'No Data', range: 'N/A' }
+    ] as LegendItem[],
+    footer: [
+      '🏥 Based on provider density, travel time, insurance coverage',
+      'Higher scores indicate worse access'
+    ]
+  });
+
+  const getPolicyRiskLegend = () => ({
+    title: 'Policy Risk Score',
+    subtitle: 'Federal funding vulnerability',
+    items: [
+      { color: '#dc2626', label: 'High Risk', range: '≥ 7.0' },
+      { color: '#f97316', label: 'Moderate-High Risk', range: '5.0-6.9' },
+      { color: '#fbbf24', label: 'Moderate Risk', range: '3.0-4.9' },
+      { color: '#22c55e', label: 'Low Risk', range: '< 3.0' },
+      { color: '#e5e7eb', label: 'No Data', range: 'N/A' }
+    ] as LegendItem[],
+    footer: [
+      '⚖️ Medicaid dependency, federal funding reliance, SNAP exposure',
+      'Higher scores indicate greater policy vulnerability'
+    ]
+  });
+
+  const getEconomicVulnerabilityLegend = () => ({
+    title: 'Economic Vulnerability Score',
+    subtitle: 'Financial health indicators',
+    items: [
+      { color: '#dc2626', label: 'High Vulnerability', range: '≥ 7.0' },
+      { color: '#f97316', label: 'Moderate-High', range: '5.0-6.9' },
+      { color: '#fbbf24', label: 'Moderate', range: '3.0-4.9' },
+      { color: '#22c55e', label: 'Low Vulnerability', range: '< 3.0' },
+      { color: '#e5e7eb', label: 'No Data', range: 'N/A' }
+    ] as LegendItem[],
+    footer: [
+      '💰 Hospital finances, private equity, employment, social factors',
+      'Higher scores indicate greater economic vulnerability'
+    ]
+  });
+
+  const getHospitalLegend = () => ({
+    title: 'Hospital Infrastructure',
+    subtitle: 'Licensed healthcare facilities',
+    items: [
+      { color: '#1e40af', label: 'Major Hospital', range: '≥ 100 beds', shape: 'circle' },
+      { color: '#3b82f6', label: 'General Hospital', range: '25-99 beds', shape: 'circle' },
+      { color: '#60a5fa', label: 'Small Hospital', range: '< 25 beds', shape: 'circle' },
+      { color: '#dc2626', label: 'Emergency Dept', range: 'Standalone ED', shape: 'square' },
+      { color: '#f3f4f6', label: 'Counties', range: 'Base layer', shape: 'area' }
+    ] as LegendItem[],
+    footer: [
+      '🏥 Circle size = bed capacity',
+      'Click facilities for detailed info'
+    ]
+  });
+
+  const getCurrentLegend = () => {
+    switch (selectedMetric) {
+      case 'hcvi':
+        return getHCVILegend();
+      case 'medicaid':
+        return getMedicaidLegend();
+      case 'healthcare-access':
+        return getHealthcareAccessLegend();
+      case 'policy-risk':
+        return getPolicyRiskLegend();
+      case 'economic-vulnerability':
+        return getEconomicVulnerabilityLegend();
+      case 'svi':
+        return getSVILegend();
+      case 'hospitals':
+        return getHospitalLegend();
+      default:
+        return getHCVILegend();
+    }
+  };
+
+  const legend = getCurrentLegend();
+
+  return (
+    <div className="absolute top-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-30 min-w-52">
+      <div className="mb-3">
+        <h3 className="font-medium text-gray-900 text-sm">{legend.title}</h3>
+        <p className="text-xs text-gray-600">{legend.subtitle}</p>
+      </div>
+      
+      <div className="space-y-2">
+        {legend.items.map((item, index) => (
+          <div key={index} className="flex items-center space-x-2">
+            <div 
+              className={`w-4 h-4 border border-gray-300 ${
+                item.shape === 'circle' ? 'rounded-full' : 
+                item.shape === 'area' ? 'rounded-sm opacity-60' : 'rounded-sm'
+              }`}
+              style={{ backgroundColor: item.color }}
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-700 font-medium">{item.label}</span>
+                <span className="text-xs text-gray-500 ml-2">{item.range}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      <div className="mt-3 pt-3 border-t border-gray-200">
+        {legend.footer.map((text, index) => (
+          <p key={index} className={`text-xs text-gray-500 ${index > 0 ? 'mt-1' : ''}`}>
+            {text}
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
