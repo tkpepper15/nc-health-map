@@ -8,8 +8,6 @@ interface HeaderProps {
 }
 
 export default function Header({ activeTab, onTabChange }: HeaderProps) {
-  const [serverStatus, setServerStatus] = useState<string>('')
-
   const tabs = [
     { id: 'home', label: 'Home' },
     { id: 'index', label: 'Index' },
@@ -17,42 +15,16 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
     { id: 'project', label: 'Project' }
   ] as const;
 
-  useEffect(() => {
-    // Quick server check for header display
-    fetch('/api/healthcare-data?aggregated=true&limit=1')
-      .then(res => res.json())
-      .then(data => {
-        const serverInfo = data.metadata?.server_info
-        if (serverInfo?.is_vercel) {
-          setServerStatus('Vercel')
-        } else if (data.metadata?.source === 'database') {
-          setServerStatus('Supabase')
-        } else {
-          setServerStatus('Local')
-        }
-      })
-      .catch(() => setServerStatus('Local'))
-  }, [])
-
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo/Title */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center">
             <h1 className="text-lg lg:text-xl font-bold text-gray-900">
               <span className="hidden sm:inline">North Carolina Healthcare Vulnerability Index</span>
               <span className="sm:hidden">NC HCVI</span>
             </h1>
-            {serverStatus && (
-              <div className="hidden lg:flex items-center px-2 py-1 bg-gray-100 rounded-full">
-                <div className={`w-2 h-2 rounded-full mr-1.5 ${
-                  serverStatus === 'Supabase' ? 'bg-green-500' :
-                  serverStatus === 'Vercel' ? 'bg-blue-500' : 'bg-yellow-500'
-                }`}></div>
-                <span className="text-xs text-gray-600 font-medium">{serverStatus}</span>
-              </div>
-            )}
           </div>
 
           {/* Navigation */}

@@ -2,13 +2,11 @@
 .mapContainer {
   position: relative;
   width: 100%;
-  height: calc(100vh - 120px);
+  height: 100%;
   min-height: 500px;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-  border-radius: 8px;
+  background: #cbd5e1;
   overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  z-index: 1; /* Lower than UI controls */
+  z-index: 0; /* Base layer */
 }
 
 /* Accessibility improvements */
@@ -24,14 +22,14 @@
 
 /* Leaflet map container styling */
 .mapContainer :global(.leaflet-container) {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%) !important;
+  background: #cbd5e1 !important;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
   z-index: 1 !important;
 }
 
 /* Ensure all Leaflet layers stay below UI controls */
 .mapContainer :global(.leaflet-map-pane) {
-  z-index: 1 !important;
+  z-index: 10 !important;
 }
 
 .mapContainer :global(.leaflet-tile-pane) {
@@ -39,7 +37,7 @@
 }
 
 .mapContainer :global(.leaflet-overlay-pane) {
-  z-index: 2 !important;
+  z-index: 20 !important;
 }
 
 /* Gray out base map tiles outside NC */

@@ -23,7 +23,112 @@
 }
 
 body {
-  background: var(--background);
+  background: #f8fafc;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Custom styles for collapsible sidebar and sticky elements */
+.sidebar-transition {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-toggle-button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-toggle-button:hover {
+  transform: scale(1.05);
+}
+
+.sticky-header {
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+/* Smooth scrolling for content areas */
+.content-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Focus styles for accessibility */
+.sidebar-toggle-button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Improved shadows */
+.enhanced-shadow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.enhanced-shadow:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Climate-conflict inspired design tweaks */
+.climate-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.climate-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Tree navigation styles */
+.tree-node {
+  transition: all 0.15s ease;
+}
+
+.tree-node:hover {
+  background-color: rgba(249, 250, 251, 0.8);
+}
+
+.tree-node.active {
+  background-color: rgba(254, 243, 199, 1);
+  color: rgba(146, 64, 14, 1);
+  font-weight: 500;
+}
+
+/* Legend dot improvements */
+.legend-dot {
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+/* Map control styling to match climate-conflict */
+.map-control-button {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
+}
+
+.map-control-button:hover {
+  background: #f9fafb;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure floating tiles are always visible */
+.floating-tile {
+  z-index: 1000 !important;
+  position: absolute !important;
+  pointer-events: auto !important;
+}
+
+/* Make sure map doesn't interfere with tiles */
+.map-container {
+  z-index: 1 !important;
+}
+
+/* Leaflet specific overrides */
+.leaflet-container {
+  z-index: 1 !important;
+}
+
+.leaflet-control-container {
+  z-index: 500 !important;
 }

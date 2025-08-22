@@ -4,7 +4,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { County, HealthcareMetrics } from '../../types/healthcare';
 import { useHealthcareStore } from '../../utils/store';
 import MapLegend from './MapLegend';
-import HoverInfo from './HoverInfo';
+import UnifiedCountyTile from './UnifiedCountyTile';
+import MapControls from './MapControls';
 import { DataLayer } from '../DataLayers/DataLayerSelector';
 import styles from './NCMap.module.css';
 
@@ -18,19 +19,52 @@ interface NCLeafletMapProps {
   onCountyClick: (county: County | null) => void;
   selectedCounty: County | null;
   currentLayer: DataLayer;
+  onHospitalClick?: (hospital: Hospital | null) => void;
+  selectedHospital?: Hospital | null;
 }
 
 interface Hospital {
   id: string | number;
   facility_name: string;
+  alt_name?: string;
+  licensee?: string;
+  license_number?: string;
+  facility_type?: string;
+  service_type?: string;
+  
+  // Location data
+  county?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  address?: string;
+  phone?: string;
   latitude: number;
   longitude: number;
+  
+  // Capacity data
+  general_beds?: number;
+  rehab_beds?: number;
+  psych_beds?: number;
+  substance_abuse_beds?: number;
+  nursing_facility_beds?: number;
   total_beds?: number;
-  facility_type?: string;
+  
+  // Operating room data
+  cardiac_surgery_rooms?: number;
+  cesarean_rooms?: number;
+  ambulatory_surgery_rooms?: number;
+  shared_rooms?: number;
+  endoscopy_rooms?: number;
+  other_surgery_rooms?: number;
+  total_surgery_rooms?: number;
+  
+  // Classification flags
   is_major_hospital?: boolean;
+  is_specialty?: boolean;
   is_emergency_dept?: boolean;
-  city?: string;
-  county?: string;
+  is_ltac?: boolean;
+  is_rehab?: boolean;
 }
 
 export default function NCLeafletMap({
@@ -39,7 +73,9 @@ export default function NCLeafletMap({
   medicaidEnabled,
   onCountyClick,
   selectedCounty,
-  currentLayer
+  currentLayer,
+  onHospitalClick,
+  selectedHospital
 }: NCLeafletMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
@@ -49,6 +85,8 @@ export default function NCLeafletMap({
   const [countyGeoData, setCountyGeoData] = useState<any>(null);
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [hospitalsLoading, setHospitalsLoading] = useState(false);
+  const [clickPosition, setClickPosition] = useState<{ x: number; y: number } | null>(null);
+  const [hospitalClickPosition, setHospitalClickPosition] = useState<{ x: number; y: number } | null>(null);
 
   const { 
     hoveredCounty, 
@@ -165,25 +203,40 @@ export default function NCLeafletMap({
         zoom: 7,
         minZoom: 6,
         maxZoom: 12,
-        zoomControl: true,
+        zoomControl: false, // We'll add custom zoom controls
         scrollWheelZoom: true,
         attributionControl: true,
         maxBounds: [
-          [33.0, -85.0], // Southwest corner (extended for comfortable viewing)
-          [37.5, -75.0]  // Northeast corner (extended for comfortable viewing)
+          [28.0, -95.0], // Southwest corner (much wider for background)
+          [42.0, -65.0]  // Northeast corner (much wider for background)
         ],
-        maxBoundsViscosity: 0.8 // Smooth boundary enforcement
+        maxBoundsViscosity: 0.3 // Allow more movement for background visibility
       });
 
-      // Add OpenStreetMap tiles optimized for North Carolina viewing
+      // Add OpenStreetMap tiles with reduced opacity
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
-        maxZoom: 12, // Limit max zoom for performance and focus
+        maxZoom: 12,
+        opacity: 0.4, // Reduce opacity for subtle background
         bounds: [
           [33.0, -85.0], // Southwest
           [37.5, -75.0]  // Northeast  
         ]
       }).addTo(mapRef.current);
+      
+      // Add seamless background overlay that covers entire visible area
+      const backgroundOverlay = L.rectangle([
+        [20.0, -100.0], // Much wider bounds to ensure full coverage
+        [50.0, -60.0]   
+      ], {
+        color: '#cbd5e1',
+        weight: 0,
+        fillColor: '#cbd5e1',
+        fillOpacity: 1,
+        interactive: false
+      }).addTo(mapRef.current);
+      
+      backgroundOverlay.bringToBack();
 
       // Add county data and hospitals
       addCountyLayer();
@@ -209,19 +262,14 @@ export default function NCLeafletMap({
     geoJsonLayerRef.current = L.geoJSON(countyGeoData, {
       style: (feature: any) => getCountyStyle(feature),
       onEachFeature: (feature: any, layer: any) => {
-        // Add popup and click handlers
-        layer.on({
-          mouseover: (e: any) => handleCountyHover(e, feature),
-          mouseout: (e: any) => handleCountyMouseOut(e),
-          click: (e: any) => handleCountyClick(e, feature)
-        });
-
-        // Bind popup
-        const popupContent = createPopupContent(feature);
-        layer.bindPopup(popupContent, {
-          closeButton: true,
-          maxWidth: 300
-        });
+        // Only add hover and click handlers if not on hospital layer
+        if (currentLayer !== 'hospitals') {
+          layer.on({
+            mouseover: (e: any) => handleCountyHover(e, feature),
+            mouseout: (e: any) => handleCountyMouseOut(e),
+            click: (e: any) => handleCountyClick(e, feature)
+          });
+        }
       }
     }).addTo(mapRef.current);
 
@@ -261,9 +309,9 @@ export default function NCLeafletMap({
           fillOpacity = 0.8;
           break;
         case 'hospitals':
-          // For hospital layer, use base color with low opacity
-          fillColor = '#f3f4f6';
-          fillOpacity = 0.3;
+          // For hospital layer, use subtle background with very low opacity
+          fillColor = '#f9fafb';
+          fillOpacity = 0.2;
           break;
         default:
           fillColor = getMedicaidColor(healthData.medicaid_enrollment_rate);
@@ -273,9 +321,9 @@ export default function NCLeafletMap({
 
     return {
       fillColor: fillColor,
-      weight: 1,
-      opacity: 1,
-      color: '#ffffff',
+      weight: currentLayer === 'hospitals' ? 0.5 : 1,
+      opacity: currentLayer === 'hospitals' ? 0.3 : 1,
+      color: currentLayer === 'hospitals' ? '#e5e7eb' : '#ffffff',
       fillOpacity: fillOpacity
     };
   };
@@ -302,69 +350,6 @@ export default function NCLeafletMap({
     return '#22c55e'; // Low Vulnerability
   };
 
-  // Create clean popup content for real data only
-  const createPopupContent = (feature: any) => {
-    const countyName = feature.properties.NAME || feature.properties.name || feature.properties.COUNTY;
-    const countyFips = feature.properties.FIPS || feature.properties.fips;
-    const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
-    
-    // Get healthcare data for this county
-    const healthData = healthcareData.find(h => h.fips_code === fullFips);
-    
-    if (!healthData) {
-      return `
-        <div class="p-4">
-          <h3 class="font-semibold text-gray-900 mb-1">${countyName}</h3>
-          <p class="text-sm text-gray-500">No data available</p>
-        </div>
-      `;
-    }
-
-    // Get simple layer-specific value and percentile
-    const layerContent = getSimpleLayerContent(healthData, currentLayer);
-
-    return `
-      <div class="p-4">
-        <h3 class="font-semibold text-gray-900 mb-2">${countyName}</h3>
-        ${layerContent}
-      </div>
-    `;
-  };
-
-  // Get simple content showing only real data for the selected layer
-  const getSimpleLayerContent = (healthData: HealthcareMetrics, layer: DataLayer) => {
-    switch (layer) {
-      case 'medicaid':
-        const medicaidRate = healthData.medicaid_enrollment_rate;
-        return `
-          <div class="text-sm">
-            <span class="text-gray-600">Medicaid Enrollment:</span>
-            <span class="font-semibold ml-1">${medicaidRate ? medicaidRate.toFixed(1) + '%' : 'No data'}</span>
-          </div>
-        `;
-      case 'svi':
-        const sviPercentile = healthData.svi_data?.svi_overall_percentile;
-        return `
-          <div class="text-sm">
-            <span class="text-gray-600">SVI Percentile:</span>
-            <span class="font-semibold ml-1">${sviPercentile ? (sviPercentile * 100).toFixed(0) + 'th' : 'No data'}</span>
-          </div>
-        `;
-      case 'hospitals':
-        return `
-          <div class="text-sm">
-            <span class="text-gray-600">Population:</span>
-            <span class="font-semibold ml-1">${healthData.population_2020?.toLocaleString() || 'No data'}</span>
-            <div class="mt-1">
-              <span class="text-gray-600">Type:</span>
-              <span class="font-semibold ml-1">${healthData.is_rural ? 'Rural' : 'Urban'}</span>
-            </div>
-          </div>
-        `;
-      default:
-        return '<div class="text-sm text-gray-500">No data available</div>';
-    }
-  };
 
   // Add hospital markers to the map
   const addHospitalMarkers = () => {
@@ -401,22 +386,17 @@ export default function NCLeafletMap({
         // Create marker
         const marker = L.marker([hospital.latitude, hospital.longitude], { icon });
         
-        // Add popup with hospital information
-        const popupContent = `
-          <div class="hospital-popup p-3">
-            <h4 class="font-bold text-gray-900 mb-2">${hospital.facility_name}</h4>
-            <div class="text-sm space-y-1">
-              <div><span class="text-gray-600">Location:</span> ${hospital.city || 'N/A'}, ${hospital.county || 'NC'}</div>
-              <div><span class="text-gray-600">Type:</span> ${hospital.facility_type || 'Hospital'}</div>
-              ${hospital.total_beds ? `<div><span class="text-gray-600">Total Beds:</span> ${hospital.total_beds}</div>` : ''}
-              ${hospital.is_emergency_dept ? '<div class="text-red-600 font-medium">Emergency Department</div>' : ''}
-            </div>
-          </div>
-        `;
-        
-        marker.bindPopup(popupContent, {
-          closeButton: true,
-          maxWidth: 250
+        // Add click handler for hospital selection
+        marker.on('click', (e: any) => {
+          e.originalEvent.stopPropagation(); // Prevent county click
+          if (onHospitalClick) {
+            // Capture hospital click position
+            setHospitalClickPosition({
+              x: e.originalEvent.clientX,
+              y: e.originalEvent.clientY
+            });
+            onHospitalClick(hospital);
+          }
         });
 
         hospitalMarkersLayer.addLayer(marker);
@@ -483,6 +463,14 @@ export default function NCLeafletMap({
     const county = counties.find(c => c.fips === fullFips);
     
     if (county) {
+      // Capture click position for fixed tile placement
+      const rect = mapContainer.current?.getBoundingClientRect();
+      if (rect && e.originalEvent) {
+        setClickPosition({
+          x: e.originalEvent.clientX,
+          y: e.originalEvent.clientY
+        });
+      }
       onCountyClick(county);
     }
   };
@@ -509,6 +497,19 @@ export default function NCLeafletMap({
     }
   }, [countyGeoData]);
 
+  // Zoom controls
+  const handleZoomIn = () => {
+    if (mapRef.current) {
+      mapRef.current.zoomIn();
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (mapRef.current) {
+      mapRef.current.zoomOut();
+    }
+  };
+
   // Error state
   if (mapError) {
     return (
@@ -532,17 +533,16 @@ export default function NCLeafletMap({
 
   // Get hovered county data
   const hoveredCountyData = hoveredCounty ? healthcareData.find(h => h.fips_code === hoveredCounty) || null : null;
-  const hoveredCountyInfo = hoveredCounty ? {
-    name: counties.find(c => c.fips === hoveredCounty)?.name || 'Unknown County',
-    fips: hoveredCounty
-  } : null;
+  
+  // Get selected county data
+  const selectedCountyData = selectedCounty ? healthcareData.find(h => h.fips_code === selectedCounty.fips) || null : null;
 
   return (
-    <div className={`w-full h-full relative overflow-hidden ${styles.mapContainer}`}>
+    <div className={`w-full h-full relative overflow-hidden bg-slate-100 ${styles.mapContainer}`}>
       {/* Map Container */}
       <div 
         ref={mapContainer} 
-        className="w-full h-full"
+        className="w-full h-full bg-slate-100"
         style={{ minHeight: '400px' }}
       />
 
@@ -561,15 +561,54 @@ export default function NCLeafletMap({
         </div>
       )}
 
+      {/* Map Controls */}
+      {mapLoaded && (
+        <MapControls
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+        />
+      )}
+
       {/* Map Legend */}
       {mapLoaded && <MapLegend selectedMetric={currentLayer} />}
 
-      {/* Hover Info */}
-      <HoverInfo
-        county={hoveredCountyInfo}
-        healthcareData={hoveredCountyData}
-        position={hoverPosition}
-      />
+      {/* Hover Info - Unified County Tile (follows cursor) */}
+      {!selectedCounty && !selectedHospital && currentLayer !== 'hospitals' && (
+        <UnifiedCountyTile
+          county={hoveredCountyData}
+          currentLayer={currentLayer}
+          position={hoverPosition}
+          isFixed={false}
+        />
+      )}
+      
+      {/* Selected County Tile (fixed position, pinned) */}
+      {selectedCounty && selectedCountyData && !selectedHospital && (
+        <UnifiedCountyTile
+          county={selectedCountyData}
+          currentLayer={currentLayer}
+          position={clickPosition}
+          isFixed={true}
+          onClose={() => {
+            onCountyClick(null);
+            setClickPosition(null);
+          }}
+        />
+      )}
+      
+      {/* Selected Hospital Tile (fixed position, pinned) */}
+      {selectedHospital && onHospitalClick && (
+        <UnifiedCountyTile
+          hospital={selectedHospital}
+          currentLayer={currentLayer}
+          position={hospitalClickPosition}
+          isFixed={true}
+          onClose={() => {
+            onHospitalClick(null);
+            setHospitalClickPosition(null);
+          }}
+        />
+      )}
 
 
       {/* Attribution */}

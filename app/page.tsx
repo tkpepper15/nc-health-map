@@ -2,13 +2,12 @@
 
 import { useState } from 'react';
 import Header from './components/Layout/Header';
-import Sidebar from './components/Layout/Sidebar';
 import MainContent from './components/Layout/MainContent';
 import NCLeafletMap from './components/Map/NCLeafletMap';
-import DataLayerSelector, { DataLayer } from './components/DataLayers/DataLayerSelector';
-import DataLayerDescription from './components/DataLayers/DataLayerDescription';
-import MetricsPanel from './components/DataLayers/MetricsPanel';
-import DataSourceIndicator from './components/UI/DataSourceIndicator';
+import FloatingDescriptionTile from './components/Index/FloatingDescriptionTile';
+import DataLayersTile from './components/Index/DataLayersTile';
+import DataDownloadButton from './components/Index/DataDownloadButton';
+import { DataLayer } from './components/DataLayers/DataLayerSelector';
 import { useHealthcareStore } from './utils/store';
 import { useOptimizedHealthcareData } from './hooks/useOptimizedHealthcareData';
 import { useHospitalData } from './hooks/useHospitalData';
@@ -18,23 +17,22 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'home' | 'index' | 'data' | 'project'>('index');
   const [medicaidEnabled, setMedicaidEnabled] = useState<boolean>(true);
   const [forceLocalData, setForceLocalData] = useState<boolean>(false);
+  const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number } | null>(null);
+  const [selectedHospital, setSelectedHospital] = useState<any>(null);
   
   const {
     selectedCounty,
-    sidebarOpen,
-    setSelectedCounty,
-    toggleSidebar,
-    setSidebarOpen
+    hoveredCounty,
+    setSelectedCounty
   } = useHealthcareStore();
 
-  // Handle data source toggle
-  const handleDataSourceToggle = () => {
-    setForceLocalData(!forceLocalData);
-    // Trigger data refresh with the toggled source
-    if (refresh) {
-      refresh();
-    }
-    console.log('Toggled data source to:', forceLocalData ? 'Supabase' : 'Local');
+  // Handle mouse events for positioning
+  const handleMouseMove = (e: MouseEvent) => {
+    setHoverPosition({ x: e.clientX, y: e.clientY });
+  };
+  
+  const handleMapClick = () => {
+    setHoverPosition(null); // Clear hover position when clicking empty area
   };
 
   // Use original optimized healthcare data hook that was working
@@ -59,6 +57,18 @@ export default function Home() {
   // Layer management
   const [currentLayer, setCurrentLayer] = useState<DataLayer>('medicaid');
 
+  const handleLayerChange = (layer: DataLayer) => {
+    setCurrentLayer(layer);
+    // Clear selections when switching to hospital layer
+    if (layer === 'hospitals') {
+      setSelectedCounty(null);
+    }
+    // Clear hospital selection when switching away from hospital layer  
+    if (layer !== 'hospitals') {
+      setSelectedHospital(null);
+    }
+  };
+
   const handleMedicaidToggle = (enabled: boolean) => {
     setMedicaidEnabled(enabled);
   };
@@ -66,13 +76,22 @@ export default function Home() {
   const handleCountyClick = (county: County | null) => {
     if (county) {
       setSelectedCounty(county.fips);
+      setSelectedHospital(null); // Clear hospital selection when county is selected
     } else {
       setSelectedCounty(null);
     }
   };
 
+  const handleHospitalClick = (hospital: any) => {
+    if (hospital) {
+      setSelectedHospital(hospital);
+      setSelectedCounty(null); // Clear county selection when hospital is selected
+    } else {
+      setSelectedHospital(null);
+    }
+  };
+
   const selectedCountyData = selectedCounty ? counties.find(c => c.fips === selectedCounty) || null : null;
-  const selectedHealthcareData = selectedCounty ? healthcareData.find(h => h.fips_code === selectedCounty) || null : null;
 
   // Show loading state with debug info
   if (loading) {
@@ -106,56 +125,36 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-slate-100 flex flex-col">
       <Header activeTab={activeTab} onTabChange={setActiveTab} />
       
       <div className="flex-1 flex">
-        <Sidebar
-          medicaidEnabled={medicaidEnabled}
-          onMedicaidToggle={handleMedicaidToggle}
-          isOpen={sidebarOpen}
-          onToggle={toggleSidebar}
-          selectedCounty={selectedHealthcareData}
-          healthcareData={healthcareData}
-          onCountyDeselect={() => setSelectedCounty(null)}
-          currentLayer={currentLayer}
-          layerStats={getHospitalStats()}
-          hospitalsLoading={hospitalsLoading}
-          dataSource={{
-            source: isBackendConnected ? 'supabase' : 'local',
-            lastUpdated: lastUpdated,
-            error: error || undefined
-          }}
-        />
-        
-        <MainContent
-          sidebarOpen={sidebarOpen}
-          onSidebarToggle={toggleSidebar}
-        >
+        <MainContent>
           {activeTab === 'index' && (
-            <>
-              {/* Data Layer Description */}
-              <DataLayerDescription currentLayer={currentLayer} />
+            <div 
+              className="relative h-full w-full overflow-hidden"
+              onClick={handleMapClick}
+            >
+              {/* Floating Tiles */}
               
-              {/* Main Map Container */}
-              <div className="relative flex-1">
-                {/* Data Layer Selector */}
-                <DataLayerSelector 
-                  currentLayer={currentLayer} 
-                  onLayerChange={setCurrentLayer} 
-                />
-                
-                {/* Map Component */}
-                <NCLeafletMap
-                  counties={counties}
-                  healthcareData={healthcareData}
-                  medicaidEnabled={medicaidEnabled}
-                  onCountyClick={handleCountyClick}
-                  selectedCounty={selectedCountyData}
-                  currentLayer={currentLayer}
-                />
-              </div>
-            </>
+              {/* Middle Left: Description tile */}
+              <FloatingDescriptionTile currentLayer={currentLayer} />
+              
+              {/* Bottom Left: Data Layers selector */}
+              <DataLayersTile currentLayer={currentLayer} onLayerChange={handleLayerChange} />
+              
+              {/* Full Screen Map */}
+              <NCLeafletMap
+                counties={counties}
+                healthcareData={healthcareData}
+                medicaidEnabled={medicaidEnabled}
+                onCountyClick={handleCountyClick}
+                selectedCounty={selectedCountyData}
+                currentLayer={currentLayer}
+                onHospitalClick={handleHospitalClick}
+                selectedHospital={selectedHospital}
+              />
+            </div>
           )}
           
           {activeTab === 'home' && (
@@ -305,17 +304,16 @@ export default function Home() {
               </div>
             </div>
           )}
+          
+          {/* Data Download Button - only show on index tab */}
+          {activeTab === 'index' && (
+            <DataDownloadButton 
+              healthcareData={healthcareData}
+              disabled={loading || !!error}
+            />
+          )}
         </MainContent>
       </div>
-
-      {/* Data Source Indicator */}
-      <DataSourceIndicator
-        source={forceLocalData ? 'local' : (isBackendConnected ? 'supabase' : 'local')}
-        lastUpdated={lastUpdated}
-        error={error || undefined}
-        onSourceToggle={handleDataSourceToggle}
-        isToggleable={true}
-      />
     </div>
   );
 }

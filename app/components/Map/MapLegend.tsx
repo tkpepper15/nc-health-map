@@ -26,7 +26,7 @@ export default function MapLegend({ selectedMetric }: MapLegendProps) {
       { color: '#e5e7eb', label: 'No Data', range: 'N/A' }
     ] as LegendItem[],
     footer: [
-      '📊 Toggle shows SVI overlay (red/orange)',
+      'Toggle shows SVI overlay (red/orange)',
       'Click counties for detailed breakdown'
     ]
   });
@@ -42,7 +42,7 @@ export default function MapLegend({ selectedMetric }: MapLegendProps) {
       { color: '#e5e7eb', label: 'No Data', range: 'N/A' }
     ] as LegendItem[],
     footer: [
-      '🏘️ Higher percentile = more vulnerable',
+      'Higher percentile = more vulnerable',
       'Based on socioeconomic, demographic factors'
     ]
   });
@@ -62,7 +62,7 @@ export default function MapLegend({ selectedMetric }: MapLegendProps) {
       { color: '#f3f4f6', label: 'Counties', range: 'Base layer', shape: 'area' }
     ] as LegendItem[],
     footer: [
-      '🏥 Circle size = bed capacity',
+      'Circle size = bed capacity',
       'Click facilities for detailed info'
     ]
   });
@@ -83,7 +83,7 @@ export default function MapLegend({ selectedMetric }: MapLegendProps) {
   const legend = getCurrentLegend();
 
   return (
-    <div className="absolute top-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-30 min-w-52">
+    <div className="absolute top-4 right-4 bg-white border border-gray-200 rounded-xl shadow-xl p-4 z-30 min-w-52">
       <div className="mb-3">
         <h3 className="font-medium text-gray-900 text-sm">{legend.title}</h3>
         <p className="text-xs text-gray-600">{legend.subtitle}</p>

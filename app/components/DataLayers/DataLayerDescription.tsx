@@ -56,7 +56,7 @@ export default function DataLayerDescription({ currentLayer }: DataLayerDescript
   const layerInfo = getLayerInfo(currentLayer);
 
   return (
-    <div className="bg-white border-b border-gray-200 p-4">
+    <div className="sticky-header border-b border-gray-200 p-4 sticky top-0 z-30">
       <div className="max-w-4xl">
         <h2 className="text-xl font-bold text-gray-900 mb-2">{layerInfo.title}</h2>
         <p className="text-sm text-gray-700 leading-relaxed mb-3">
