@@ -245,9 +245,9 @@ export function useUnifiedHealthcareData() {
             const { mockHealthcareData } = await import('../data/healthcareData');
             const { ncCountiesGeoJSON } = await import('../data/ncCountiesGeoJSON');
             
-            const transformedData = mockHealthcareData.slice(0, 10).map((item: any) => transformToUnifiedFormat(item, 'local'));
+            const transformedData = mockHealthcareData.slice(0, 5).map((item: any) => transformToUnifiedFormat(item, 'local'));
             setHealthcareData(transformedData);
-            setCounties(ncCountiesGeoJSON.features.slice(0, 10).map(f => ({
+            setCounties(ncCountiesGeoJSON.features.slice(0, 5).map(f => ({
               id: `37${f.properties.FIPS}`,
               name: f.properties.NAME,
               fips: `37${f.properties.FIPS}`,
