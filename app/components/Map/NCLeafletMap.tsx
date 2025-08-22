@@ -125,8 +125,9 @@ export default function NCLeafletMap({
   // Load county boundaries from processed data
   const loadCountyBoundaries = async () => {
     try {
-      // Import our processed GeoJSON data
-      const { ncCountiesGeoJSON } = await import('../../data/ncCountiesGeoJSON');
+      // Load our processed GeoJSON data
+      const response = await fetch('/data/nc-counties.json');
+      const ncCountiesGeoJSON = await response.json();
       setCountyGeoData(ncCountiesGeoJSON);
     } catch (error) {
       console.error('Failed to load county boundaries:', error);
@@ -345,9 +346,8 @@ export default function NCLeafletMap({
     return '#22c55e'; // Low Vulnerability
   };
 
-  // Create popup content based on current layer
+  // Create clean popup content for real data only
   const createPopupContent = (feature: any) => {
-    // Use properties from our processed data
     const countyName = feature.properties.NAME || feature.properties.name || feature.properties.COUNTY;
     const countyFips = feature.properties.FIPS || feature.properties.fips;
     const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
@@ -357,111 +357,56 @@ export default function NCLeafletMap({
     
     if (!healthData) {
       return `
-        <div class="p-3 min-w-48">
-          <h3 class="font-bold text-lg text-gray-900 mb-2">${countyName}</h3>
+        <div class="p-4">
+          <h3 class="font-semibold text-gray-900 mb-1">${countyName}</h3>
           <p class="text-sm text-gray-500">No data available</p>
         </div>
       `;
     }
 
-    // Get layer-specific content
-    const layerContent = getLayerSpecificContent(healthData, currentLayer);
+    // Get simple layer-specific value and percentile
+    const layerContent = getSimpleLayerContent(healthData, currentLayer);
 
     return `
-      <div class="p-3 min-w-48">
-        <h3 class="font-bold text-lg text-gray-900 mb-3">${countyName}</h3>
+      <div class="p-4">
+        <h3 class="font-semibold text-gray-900 mb-2">${countyName}</h3>
         ${layerContent}
-        <div class="mt-2 pt-2 border-t border-gray-200 text-xs text-gray-500">
-          Click for full county details
-        </div>
       </div>
     `;
   };
 
-  // Get content specific to the current data layer
-  const getLayerSpecificContent = (healthData: HealthcareMetrics, layer: DataLayer) => {
+  // Get simple content showing only real data for the selected layer
+  const getSimpleLayerContent = (healthData: HealthcareMetrics, layer: DataLayer) => {
     switch (layer) {
-      case 'hcvi':
-        return `
-          <div class="p-2 bg-blue-50 rounded mb-2">
-            <div class="text-sm font-medium text-blue-900">HCVI Score: ${healthData.hcvi_composite?.toFixed(1) || 'N/A'}/10</div>
-            <div class="text-xs text-blue-700">Risk Level: ${healthData.vulnerability_category || 'Unknown'}</div>
-          </div>
-        `;
       case 'medicaid':
+        const medicaidRate = healthData.medicaid_enrollment_rate;
         return `
-          <div class="space-y-1 text-sm">
-            <div class="flex justify-between">
-              <span class="text-gray-600">Enrollment Rate:</span>
-              <span class="font-semibold">${healthData.medicaid_enrollment_rate?.toFixed(1) || 'N/A'}%</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-gray-600">Total Enrolled:</span>
-              <span class="font-medium">${healthData.medicaid_total_enrollment?.toLocaleString() || 'N/A'}</span>
-            </div>
-          </div>
-        `;
-      case 'healthcare-access':
-        return `
-          <div class="space-y-1 text-sm">
-            <div class="flex justify-between">
-              <span class="text-gray-600">Access Score:</span>
-              <span class="font-semibold">${healthData.healthcare_access_score ? healthData.healthcare_access_score.toFixed(1) + '/10' : '--'}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-gray-600">Provider Density:</span>
-              <span class="font-medium">${healthData.healthcareAccess?.providerDensity ? healthData.healthcareAccess.providerDensity.toFixed(1) + ' per 10k' : '--'}</span>
-            </div>
-          </div>
-        `;
-      case 'policy-risk':
-        return `
-          <div class="space-y-1 text-sm">
-            <div class="flex justify-between">
-              <span class="text-gray-600">Policy Risk Score:</span>
-              <span class="font-semibold">${healthData.policy_risk_score ? healthData.policy_risk_score.toFixed(1) + '/10' : '--'}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-gray-600">Medicaid Dependency:</span>
-              <span class="font-medium">${healthData.medicaid_dependency_ratio ? healthData.medicaid_dependency_ratio.toFixed(3) : '--'}</span>
-            </div>
-          </div>
-        `;
-      case 'economic-vulnerability':
-        return `
-          <div class="space-y-1 text-sm">
-            <div class="flex justify-between">
-              <span class="text-gray-600">Economic Risk:</span>
-              <span class="font-semibold">${healthData.economic_vulnerability_score ? healthData.economic_vulnerability_score.toFixed(1) + '/10' : '--'}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-gray-600">Healthcare Employment:</span>
-              <span class="font-medium">${healthData.economicVulnerability?.healthcareEmployment ? healthData.economicVulnerability.healthcareEmployment.toFixed(1) + '%' : '--'}</span>
-            </div>
+          <div class="text-sm">
+            <span class="text-gray-600">Medicaid Enrollment:</span>
+            <span class="font-semibold ml-1">${medicaidRate ? medicaidRate.toFixed(1) + '%' : 'No data'}</span>
           </div>
         `;
       case 'svi':
+        const sviPercentile = healthData.svi_data?.svi_overall_percentile;
         return `
-          <div class="space-y-1 text-sm">
-            <div class="flex justify-between">
-              <span class="text-gray-600">SVI Percentile:</span>
-              <span class="font-semibold">${healthData.svi_data?.svi_overall_percentile ? (healthData.svi_data.svi_overall_percentile * 100).toFixed(0) + '%' : '--'}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-gray-600">Poverty Rate (150%):</span>
-              <span class="font-medium">${healthData.svi_data?.poverty_150_pct ? healthData.svi_data.poverty_150_pct.toFixed(1) + '%' : '--'}</span>
-            </div>
+          <div class="text-sm">
+            <span class="text-gray-600">SVI Percentile:</span>
+            <span class="font-semibold ml-1">${sviPercentile ? (sviPercentile * 100).toFixed(0) + 'th' : 'No data'}</span>
           </div>
         `;
       case 'hospitals':
         return `
-          <div class="text-sm text-gray-600">
-            <div class="mb-1">Population: ${healthData.population_2020?.toLocaleString() || 'N/A'}</div>
-            <div>Classification: ${healthData.is_rural ? 'Rural' : 'Urban'}</div>
+          <div class="text-sm">
+            <span class="text-gray-600">Population:</span>
+            <span class="font-semibold ml-1">${healthData.population_2020?.toLocaleString() || 'No data'}</span>
+            <div class="mt-1">
+              <span class="text-gray-600">Type:</span>
+              <span class="font-semibold ml-1">${healthData.is_rural ? 'Rural' : 'Urban'}</span>
+            </div>
           </div>
         `;
       default:
-        return '';
+        return '<div class="text-sm text-gray-500">No data available</div>';
     }
   };
 

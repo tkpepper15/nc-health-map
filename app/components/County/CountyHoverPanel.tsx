@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { HealthcareMetrics } from '../../types/healthcare';
-import { getMedicaidDataByCounty } from '../../data/healthcareData';
 
 interface CountyHoverPanelProps {
   county: HealthcareMetrics | null;

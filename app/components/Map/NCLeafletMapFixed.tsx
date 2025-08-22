@@ -259,7 +259,8 @@ export default function NCLeafletMapFixed({
         }
 
         // Load county boundaries
-        const { ncCountiesGeoJSON } = await import('../../data/ncCountiesGeoJSON');
+        const response = await fetch('/data/nc-counties.json');
+        const ncCountiesGeoJSON = await response.json();
         
         if (!mountedRef.current) return;
 

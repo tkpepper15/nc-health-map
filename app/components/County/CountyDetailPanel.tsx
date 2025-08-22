@@ -9,51 +9,12 @@ interface CountyDetailPanelProps {
   currentLayer?: DataLayer;
 }
 
-export default function CountyDetailPanel({ county, onClose, currentLayer = 'hcvi' }: CountyDetailPanelProps) {
+export default function CountyDetailPanel({ county, onClose, currentLayer = 'medicaid' }: CountyDetailPanelProps) {
   if (!county) return null;
 
   // Render primary data based on current layer
   const renderPrimaryLayerData = (county: HealthcareMetrics, layer: DataLayer) => {
     switch (layer) {
-      case 'hcvi':
-        return (
-          <>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-              <span className="w-3 h-3 bg-blue-600 rounded-full mr-2"></span>
-              Healthcare Vulnerability Index
-            </h3>
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 mb-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-blue-900">HCVI Composite Score</span>
-                <span className="text-3xl font-bold text-blue-700">
-                  {county.hcvi_composite?.toFixed(1) || 'N/A'}<span className="text-lg text-blue-600">/10</span>
-                </span>
-              </div>
-              <div className={`inline-block px-3 py-1 rounded text-sm font-medium ${
-                county.vulnerability_category === 'extreme' ? 'bg-red-100 text-red-800' :
-                county.vulnerability_category === 'high' ? 'bg-orange-100 text-orange-800' :
-                county.vulnerability_category === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-green-100 text-green-800'
-              }`}>
-                {county.vulnerability_category?.toUpperCase() || 'Unknown'} RISK
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3 text-sm">
-              <div className="text-center p-3 bg-orange-50 rounded border">
-                <div className="text-lg font-bold text-orange-700">{county.healthcare_access_score?.toFixed(1) || 'N/A'}</div>
-                <div className="text-xs text-orange-600">Healthcare Access</div>
-              </div>
-              <div className="text-center p-3 bg-red-50 rounded border">
-                <div className="text-lg font-bold text-red-700">{county.policy_risk_score?.toFixed(1) || 'N/A'}</div>
-                <div className="text-xs text-red-600">Policy Risk</div>
-              </div>
-              <div className="text-center p-3 bg-purple-50 rounded border">
-                <div className="text-lg font-bold text-purple-700">{county.economic_vulnerability_score?.toFixed(1) || 'N/A'}</div>
-                <div className="text-xs text-purple-600">Economic Risk</div>
-              </div>
-            </div>
-          </>
-        );
       case 'medicaid':
         return (
           <>
@@ -90,108 +51,6 @@ export default function CountyDetailPanel({ county, onClose, currentLayer = 'hcv
                 <span className="font-medium text-gray-700">
                   {county.medicaid_dependency_ratio ? county.medicaid_dependency_ratio.toFixed(3) : '--'}
                 </span>
-              </div>
-            </div>
-          </>
-        );
-      case 'healthcare-access':
-        return (
-          <>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-              <span className="w-3 h-3 bg-orange-500 rounded-full mr-2"></span>
-              Healthcare Access
-            </h3>
-            <div className="p-4 bg-orange-50 rounded-lg border border-orange-200 mb-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-orange-900">Access Score</span>
-                <span className="text-3xl font-bold text-orange-700">
-                  {county.healthcare_access_score?.toFixed(1) || 'N/A'}<span className="text-lg text-orange-600">/10</span>
-                </span>
-              </div>
-              <div className="text-xs text-orange-600">
-                Lower scores indicate better access
-              </div>
-            </div>
-            <div className="grid grid-cols-1 gap-3 text-sm">
-              <div className="flex justify-between p-3 bg-white rounded border">
-                <span className="text-gray-600">Provider Density:</span>
-                <span className="font-medium">{county.healthcareAccess?.providerDensity ? `${county.healthcareAccess.providerDensity.toFixed(1)} per 10k` : '--'}</span>
-              </div>
-              <div className="flex justify-between p-3 bg-white rounded border">
-                <span className="text-gray-600">Insurance Coverage:</span>
-                <span className="font-medium">{county.healthcareAccess?.insuranceCoverage ? `${county.healthcareAccess.insuranceCoverage.toFixed(1)}%` : '--'}</span>
-              </div>
-              <div className="flex justify-between p-3 bg-white rounded border">
-                <span className="text-gray-600">Travel Time to Hospital:</span>
-                <span className="font-medium">{county.healthcareAccess?.geographicAccess ? `${county.healthcareAccess.geographicAccess.toFixed(1)} min` : '--'}</span>
-              </div>
-            </div>
-          </>
-        );
-      case 'policy-risk':
-        return (
-          <>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-              <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
-              Policy Risk Assessment
-            </h3>
-            <div className="p-4 bg-red-50 rounded-lg border border-red-200 mb-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-red-900">Policy Risk Score</span>
-                <span className="text-3xl font-bold text-red-700">
-                  {county.policy_risk_score?.toFixed(1) || 'N/A'}<span className="text-lg text-red-600">/10</span>
-                </span>
-              </div>
-              <div className="text-xs text-red-600">
-                Higher scores indicate greater vulnerability to policy changes
-              </div>
-            </div>
-            <div className="grid grid-cols-1 gap-3 text-sm">
-              <div className="flex justify-between p-3 bg-white rounded border">
-                <span className="text-gray-600">Medicaid Dependency:</span>
-                <span className="font-medium">{county.medicaid_dependency_ratio ? county.medicaid_dependency_ratio.toFixed(3) : '--'}</span>
-              </div>
-              <div className="flex justify-between p-3 bg-white rounded border">
-                <span className="text-gray-600">Federal Funding Reliance:</span>
-                <span className="font-medium">{county.policyRisk?.federalFundingReliance ? `${county.policyRisk.federalFundingReliance.toFixed(1)}%` : '--'}</span>
-              </div>
-              <div className="flex justify-between p-3 bg-white rounded border">
-                <span className="text-gray-600">SNAP Vulnerability:</span>
-                <span className="font-medium">{county.policyRisk?.snapVulnerability ? `${county.policyRisk.snapVulnerability.toFixed(1)}%` : '--'}</span>
-              </div>
-            </div>
-          </>
-        );
-      case 'economic-vulnerability':
-        return (
-          <>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-              <span className="w-3 h-3 bg-purple-500 rounded-full mr-2"></span>
-              Economic Vulnerability
-            </h3>
-            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200 mb-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-purple-900">Economic Risk Score</span>
-                <span className="text-3xl font-bold text-purple-700">
-                  {county.economic_vulnerability_score?.toFixed(1) || 'N/A'}<span className="text-lg text-purple-600">/10</span>
-                </span>
-              </div>
-              <div className="text-xs text-purple-600">
-                Higher scores indicate greater economic vulnerability
-              </div>
-            </div>
-            <div className="grid grid-cols-1 gap-3 text-sm">
-              <div className="flex justify-between p-3 bg-white rounded border">
-                <span className="text-gray-600">Hospital Financial Health:</span>
-                <span className="font-medium">--</span>
-              </div>
-              <div className="flex justify-between p-3 bg-white rounded border">
-                <span className="text-gray-600">Healthcare Employment:</span>
-                <span className="font-medium">{county.economicVulnerability?.healthcareEmployment ? `${county.economicVulnerability.healthcareEmployment.toFixed(1)}%` : '--'}</span>
-              </div>
-              <div className="flex justify-between p-3 bg-white rounded border">
-                <span className="text-gray-600">Private Equity Exposure:</span>
-                <span className="font-medium">--</span>
               </div>
             </div>
           </>

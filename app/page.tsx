@@ -166,33 +166,32 @@ export default function Home() {
                 </h1>
                 <div className="prose max-w-none">
                   <p className="text-lg text-gray-700 mb-4">
-                    Welcome to the North Carolina Healthcare Vulnerability Index (HCVI), an interactive tool for 
-                    visualizing the complex healthcare landscape across North Carolina's 100 counties.
+                    North Carolina Healthcare Data Viewer - an interactive mapping tool displaying real healthcare 
+                    data across North Carolina's 100 counties.
                   </p>
                   <p className="text-gray-600 mb-6">
-                    This application analyzes the impacts of federal healthcare legislation and policy changes 
-                    on communities throughout the state, with particular focus on rural healthcare access, 
-                    Medicaid dependency, and economic vulnerability.
+                    Currently showing verified data from state and federal sources including Medicaid enrollment 
+                    rates, social vulnerability indicators, and hospital infrastructure.
                   </p>
                   
                   <div className="grid md:grid-cols-2 gap-6 mt-8">
                     <div className="bg-blue-50 p-6 rounded-lg">
-                      <h3 className="text-xl font-semibold text-blue-900 mb-3">Key Features</h3>
+                      <h3 className="text-xl font-semibold text-blue-900 mb-3">Available Data</h3>
                       <ul className="space-y-2 text-blue-800">
-                        <li>• Interactive county-level healthcare vulnerability mapping</li>
-                        <li>• Real-time Medicaid enrollment and dependency analysis</li>
-                        <li>• Policy risk assessments for federal funding changes</li>
-                        <li>• Economic vulnerability indicators for healthcare systems</li>
+                        <li>• County-level Medicaid enrollment rates</li>
+                        <li>• CDC Social Vulnerability Index (SVI) percentiles</li>
+                        <li>• Hospital facility locations and capacity</li>
+                        <li>• Population and rural/urban classification</li>
                       </ul>
                     </div>
                     
-                    <div className="bg-green-50 p-6 rounded-lg">
-                      <h3 className="text-xl font-semibold text-green-900 mb-3">Data Sources</h3>
-                      <ul className="space-y-2 text-green-800">
-                        <li>• NC DHHS Medicaid enrollment data (June 2025)</li>
-                        <li>• U.S. Census demographic and economic indicators</li>
-                        <li>• CMS hospital financial data and performance metrics</li>
-                        <li>• County health rankings and social determinants</li>
+                    <div className="bg-amber-50 p-6 rounded-lg">
+                      <h3 className="text-xl font-semibold text-amber-900 mb-3">Data Sources</h3>
+                      <ul className="space-y-2 text-amber-800">
+                        <li>• NC Medicaid enrollment databases</li>
+                        <li>• CDC Social Vulnerability Index</li>
+                        <li>• NC hospital licensing data</li>
+                        <li>• U.S. Census population data</li>
                       </ul>
                     </div>
                   </div>
@@ -204,55 +203,48 @@ export default function Home() {
           {activeTab === 'data' && (
             <div className="p-8 bg-white overflow-y-auto h-full">
               <div className="max-w-6xl mx-auto">
-                <h1 className="text-3xl font-bold text-gray-900 mb-6">Healthcare Data Overview</h1>
+                <h1 className="text-3xl font-bold text-gray-900 mb-6">Real Healthcare Data Summary</h1>
                 <div className="grid md:grid-cols-3 gap-6 mb-8">
                   <div className="bg-gray-50 p-6 rounded-lg">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Counties</h3>
-                    <p className="text-3xl font-bold text-blue-600">100</p>
-                    <p className="text-sm text-gray-600">All NC counties covered</p>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Counties with Data</h3>
+                    <p className="text-3xl font-bold text-blue-600">{healthcareData.length}</p>
+                    <p className="text-sm text-gray-600">North Carolina counties</p>
                   </div>
                   <div className="bg-gray-50 p-6 rounded-lg">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Medicaid Enrollees</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Avg Medicaid Rate</h3>
                     <p className="text-3xl font-bold text-green-600">
-                      {healthcareData.reduce((sum, d) => sum + (d.medicaid_total_enrollment || 0), 0).toLocaleString()}
+                      {(() => {
+                        const validCounties = healthcareData.filter(d => d.medicaid_enrollment_rate !== null && d.medicaid_enrollment_rate !== undefined);
+                        return validCounties.length > 0 ? 
+                          (validCounties.reduce((sum, d) => sum + d.medicaid_enrollment_rate, 0) / validCounties.length).toFixed(1) + '%'
+                          : 'N/A';
+                      })()}
                     </p>
-                    <p className="text-sm text-gray-600">Statewide total</p>
+                    <p className="text-sm text-gray-600">Across all counties</p>
                   </div>
                   <div className="bg-gray-50 p-6 rounded-lg">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">High Risk Counties</h3>
-                    <p className="text-3xl font-bold text-red-600">
-                      {healthcareData.filter(d => d.vulnerability_category === 'high' || d.vulnerability_category === 'extreme').length}
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Rural Counties</h3>
+                    <p className="text-3xl font-bold text-amber-600">
+                      {healthcareData.filter(d => d.is_rural).length}
                     </p>
-                    <p className="text-sm text-gray-600">HCVI score ≥ 6.5</p>
+                    <p className="text-sm text-gray-600">Classified as rural</p>
                   </div>
                 </div>
                 
                 <div className="bg-white border rounded-lg p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">County Vulnerability Distribution</h3>
-                  <div className="grid grid-cols-4 gap-4">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">Data Availability Status</h3>
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-green-100 rounded">
                       <div className="text-2xl font-bold text-green-700">
-                        {healthcareData.filter(d => d.vulnerability_category === 'low').length}
+                        {healthcareData.filter(d => d.medicaid_enrollment_rate !== null && d.medicaid_enrollment_rate !== undefined).length}
                       </div>
-                      <div className="text-sm text-green-600">Low Risk</div>
+                      <div className="text-sm text-green-600">Counties with Medicaid Data</div>
                     </div>
-                    <div className="text-center p-4 bg-yellow-100 rounded">
-                      <div className="text-2xl font-bold text-yellow-700">
-                        {healthcareData.filter(d => d.vulnerability_category === 'moderate').length}
+                    <div className="text-center p-4 bg-blue-100 rounded">
+                      <div className="text-2xl font-bold text-blue-700">
+                        {healthcareData.filter(d => d.svi_data?.svi_overall_percentile !== null && d.svi_data?.svi_overall_percentile !== undefined).length}
                       </div>
-                      <div className="text-sm text-yellow-600">Moderate Risk</div>
-                    </div>
-                    <div className="text-center p-4 bg-orange-100 rounded">
-                      <div className="text-2xl font-bold text-orange-700">
-                        {healthcareData.filter(d => d.vulnerability_category === 'high').length}
-                      </div>
-                      <div className="text-sm text-orange-600">High Risk</div>
-                    </div>
-                    <div className="text-center p-4 bg-red-100 rounded">
-                      <div className="text-2xl font-bold text-red-700">
-                        {healthcareData.filter(d => d.vulnerability_category === 'extreme').length}
-                      </div>
-                      <div className="text-sm text-red-600">Extreme Risk</div>
+                      <div className="text-sm text-blue-600">Counties with SVI Data</div>
                     </div>
                   </div>
                 </div>
@@ -263,48 +255,32 @@ export default function Home() {
           {activeTab === 'project' && (
             <div className="p-8 bg-white overflow-y-auto h-full">
               <div className="max-w-4xl mx-auto">
-                <h1 className="text-3xl font-bold text-gray-900 mb-6">About This Project</h1>
+                <h1 className="text-3xl font-bold text-gray-900 mb-6">North Carolina Healthcare Data Viewer</h1>
                 <div className="prose max-w-none">
                   <p className="text-lg text-gray-700 mb-4">
-                    The North Carolina Healthcare Vulnerability Index (HCVI) was developed to provide 
-                    evidence-based insights into how federal policy changes affect healthcare access 
-                    and delivery across the state.
+                    This interactive mapping application displays verified healthcare data across 
+                    North Carolina's 100 counties from state and federal sources.
                   </p>
                   
-                  <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">Methodology</h2>
-                  <p className="text-gray-700 mb-4">
-                    The HCVI combines multiple data sources and indicators to create a composite score 
-                    for each county, weighted across three primary domains:
-                  </p>
-                  
-                  <div className="grid md:grid-cols-3 gap-6 my-8">
-                    <div className="border rounded-lg p-4">
-                      <h3 className="font-semibold text-blue-900 mb-2">Healthcare Access (33%)</h3>
-                      <ul className="text-sm text-gray-600 space-y-1">
-                        <li>• Provider density</li>
-                        <li>• Hospital access</li>
-                        <li>• Insurance coverage</li>
-                        <li>• Specialty services</li>
+                  <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">Current Data Sources</h2>
+                  <div className="grid md:grid-cols-2 gap-6 my-8">
+                    <div className="border rounded-lg p-6">
+                      <h3 className="font-semibold text-blue-900 mb-3">✅ Available Data</h3>
+                      <ul className="text-sm text-gray-700 space-y-2">
+                        <li>• <strong>Medicaid Enrollment:</strong> County-level enrollment rates</li>
+                        <li>• <strong>Social Vulnerability:</strong> CDC SVI percentiles</li>
+                        <li>• <strong>Hospital Infrastructure:</strong> 163 licensed facilities</li>
+                        <li>• <strong>Demographics:</strong> Population and rural classification</li>
                       </ul>
                     </div>
                     
-                    <div className="border rounded-lg p-4">
-                      <h3 className="font-semibold text-orange-900 mb-2">Policy Risk (33%)</h3>
-                      <ul className="text-sm text-gray-600 space-y-1">
-                        <li>• Medicaid dependency</li>
-                        <li>• Federal funding reliance</li>
-                        <li>• SNAP vulnerability</li>
-                        <li>• Work requirement impact</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="border rounded-lg p-4">
-                      <h3 className="font-semibold text-red-900 mb-2">Economic Vulnerability (34%)</h3>
-                      <ul className="text-sm text-gray-600 space-y-1">
-                        <li>• Hospital financial health</li>
-                        <li>• Private equity exposure</li>
-                        <li>• Healthcare employment</li>
-                        <li>• Social determinants</li>
+                    <div className="border rounded-lg p-6">
+                      <h3 className="font-semibold text-amber-900 mb-3">🚧 Future Development</h3>
+                      <ul className="text-sm text-gray-700 space-y-2">
+                        <li>• Healthcare access metrics</li>
+                        <li>• Policy impact assessments</li>
+                        <li>• Economic vulnerability indicators</li>
+                        <li>• Composite risk scoring</li>
                       </ul>
                     </div>
                   </div>

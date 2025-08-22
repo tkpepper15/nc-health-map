@@ -213,9 +213,10 @@ export function useOptimizedHealthcareData() {
             const healthcareData = backendData.map((item: any) => transformBackendData(item));
 
           // Load county boundaries from GeoJSON 
-          const { ncCountiesGeoJSON } = await import('../data/ncCountiesGeoJSON');
+          const geoResponse = await fetch('/data/nc-counties.json');
+          const ncCountiesGeoJSON = await geoResponse.json();
           
-          const countiesData: County[] = ncCountiesGeoJSON.features.map(feature => {
+          const countiesData: County[] = ncCountiesGeoJSON.features.map((feature: any) => {
             const countyFips = feature.properties?.FIPS || feature.properties?.fips || '';
             const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
             return {
@@ -253,9 +254,10 @@ export function useOptimizedHealthcareData() {
 
       // Fallback to local data
       const { mockHealthcareData } = await import('../data/healthcareData');
-      const { ncCountiesGeoJSON } = await import('../data/ncCountiesGeoJSON');
+      const geoResponse = await fetch('/data/nc-counties.json');
+      const ncCountiesGeoJSON = await geoResponse.json();
       
-      const countiesData: County[] = ncCountiesGeoJSON.features.map(feature => {
+      const countiesData: County[] = ncCountiesGeoJSON.features.map((feature: any) => {
         const countyFips = feature.properties?.FIPS || feature.properties?.fips || '';
         const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
         return {

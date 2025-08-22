@@ -40,10 +40,11 @@ export function useHealthcareData() {
       setData(mockHealthcareData as HealthcareMetrics[]);
       
       // Import GeoJSON county data
-      const { ncCountiesGeoJSON } = await import('../data/ncCountiesGeoJSON');
+      const response = await fetch('/data/nc-counties.json');
+      const ncCountiesGeoJSON = await response.json();
       
       // Transform GeoJSON to County format
-      const countiesData: County[] = ncCountiesGeoJSON.features.map(feature => ({
+      const countiesData: County[] = ncCountiesGeoJSON.features.map((feature: any) => ({
         id: feature.properties?.FIPS || feature.properties?.fips || '',
         name: feature.properties?.NAME || feature.properties?.name || '',
         fips: feature.properties?.FIPS || feature.properties?.fips || '',
@@ -118,11 +119,12 @@ export function useCountyDetails(fipsCode: string | null) {
       try {
         // Import local data
         const { mockHealthcareData, getMedicaidDataByCounty } = await import('../data/healthcareData');
-        const { ncCountiesGeoJSON } = await import('../data/ncCountiesGeoJSON');
+        const response = await fetch('/data/nc-counties.json');
+      const ncCountiesGeoJSON = await response.json();
         
         // Find healthcare data by FIPS
         const healthcareData = mockHealthcareData.find(county => county.fips_code === fipsCode);
-        const geoData = ncCountiesGeoJSON.features.find(feature => feature.properties?.fips === fipsCode);
+        const geoData = ncCountiesGeoJSON.features.find((feature: any) => feature.properties?.fips === fipsCode);
         const medicaidData = healthcareData ? getMedicaidDataByCounty(healthcareData.countyName) : null;
         
         if (healthcareData && geoData) {

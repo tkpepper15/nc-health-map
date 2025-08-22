@@ -142,15 +142,19 @@
 
 .mapContainer :global(.leaflet-popup-close-button) {
   color: #6b7280 !important;
-  font-size: 18px !important;
-  font-weight: bold !important;
-  padding: 4px 8px !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  padding: 8px 10px !important;
+  margin: 4px !important;
+  line-height: 1 !important;
+  border-radius: 4px !important;
+  transition: all 0.2s ease !important;
 }
 
 .mapContainer :global(.leaflet-popup-close-button:hover) {
   color: #374151 !important;
   background: #f3f4f6 !important;
-  border-radius: 4px !important;
+  transform: scale(1.1) !important;
 }
 
 /* Remove default Leaflet attribution for cleaner look */

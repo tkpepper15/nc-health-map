@@ -174,7 +174,8 @@ export function useUnifiedHealthcareData() {
       console.log('📁 Loading local healthcare data...');
       const { mockHealthcareData } = await import('../data/healthcareData');
       console.log('📁 Loading county GeoJSON data...');
-      const { ncCountiesGeoJSON } = await import('../data/ncCountiesGeoJSON');
+      const geoResponse = await fetch('/data/nc-counties.json');
+      const ncCountiesGeoJSON = await geoResponse.json();
       console.log('✅ Local data loaded successfully:', { 
         healthcareDataLength: mockHealthcareData.length,
         countiesLength: ncCountiesGeoJSON.features.length 
@@ -195,7 +196,7 @@ export function useUnifiedHealthcareData() {
         lastUpdated: null
       });
 
-      const countiesData: County[] = ncCountiesGeoJSON.features.map(feature => {
+      const countiesData: County[] = ncCountiesGeoJSON.features.map((feature: any) => {
         const countyFips = feature.properties?.FIPS || feature.properties?.fips || '';
         const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
         return {
@@ -243,11 +244,12 @@ export function useUnifiedHealthcareData() {
         const loadFallbackData = async () => {
           try {
             const { mockHealthcareData } = await import('../data/healthcareData');
-            const { ncCountiesGeoJSON } = await import('../data/ncCountiesGeoJSON');
+            const fallbackGeoResponse = await fetch('/data/nc-counties.json');
+            const ncCountiesGeoJSON = await fallbackGeoResponse.json();
             
             const transformedData = mockHealthcareData.slice(0, 5).map((item: any) => transformToUnifiedFormat(item, 'local'));
             setHealthcareData(transformedData);
-            setCounties(ncCountiesGeoJSON.features.slice(0, 5).map(f => ({
+            setCounties(ncCountiesGeoJSON.features.slice(0, 5).map((f: any) => ({
               id: `37${f.properties.FIPS}`,
               name: f.properties.NAME,
               fips: `37${f.properties.FIPS}`,

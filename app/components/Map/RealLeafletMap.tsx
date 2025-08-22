@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { County, HealthcareMetrics } from '../../types/healthcare';
 import { getLayerColor, getLayerValue } from '../../utils/dataLayers';
-import { ncCountiesGeoJSON } from '../../data/ncCountiesGeoJSON';
+// GeoJSON moved to public/data/nc-counties.json
 import MapLegend from './MapLegend';
 import CountyPopup from './CountyPopup';
 import { DataLayer } from '../DataLayers/DataLayerSelector';
@@ -169,7 +169,9 @@ export default function RealLeafletMap({
           }
         };
 
-        // Add GeoJSON layer
+        // Load and add GeoJSON layer
+        const response = await fetch('/data/nc-counties.json');
+        const ncCountiesGeoJSON = await response.json();
         const geoJsonLayer = L.geoJSON(ncCountiesGeoJSON, {
           style,
           onEachFeature

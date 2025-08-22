@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-export type DataLayer = 'medicaid' | 'svi' | 'hospitals' | 'hcvi' | 'healthcare-access' | 'policy-risk' | 'economic-vulnerability';
+export type DataLayer = 'medicaid' | 'svi' | 'hospitals';
 
 interface DataLayerSelectorProps {
   currentLayer: DataLayer;
@@ -12,34 +12,10 @@ interface DataLayerSelectorProps {
 export default function DataLayerSelector({ currentLayer, onLayerChange }: DataLayerSelectorProps) {
   const layers = [
     {
-      id: 'hcvi' as DataLayer,
-      name: 'Healthcare Vulnerability Index',
-      icon: '🎯',
-      description: 'Composite HCVI score'
-    },
-    {
       id: 'medicaid' as DataLayer,
       name: 'Medicaid Enrollment',
       icon: '📊',
-      description: 'State-level enrollment data'
-    },
-    {
-      id: 'healthcare-access' as DataLayer,
-      name: 'Healthcare Access',
-      icon: '🏥',
-      description: 'Provider density & accessibility'
-    },
-    {
-      id: 'policy-risk' as DataLayer,
-      name: 'Policy Risk',
-      icon: '⚖️',
-      description: 'Federal funding vulnerability'
-    },
-    {
-      id: 'economic-vulnerability' as DataLayer,
-      name: 'Economic Vulnerability',
-      icon: '💰',
-      description: 'Financial health indicators'
+      description: 'Real enrollment rate data'
     },
     {
       id: 'svi' as DataLayer,
@@ -51,7 +27,7 @@ export default function DataLayerSelector({ currentLayer, onLayerChange }: DataL
       id: 'hospitals' as DataLayer,
       name: 'Hospital Infrastructure',
       icon: '🏥',
-      description: 'Licensed facility data'
+      description: 'Licensed facility locations'
     }
   ];
 

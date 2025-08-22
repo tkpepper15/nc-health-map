@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { County, HealthcareMetrics } from '../../types/healthcare';
 import { getLayerColor, getLayerValue } from '../../utils/dataLayers';
-import { ncCountiesGeoJSON } from '../../data/ncCountiesGeoJSON';
+// GeoJSON moved to public/data/nc-counties.json
 import MapLegend from './MapLegend';
 import CountyPopup from './CountyPopup';
 import { DataLayer } from '../DataLayers/DataLayerSelector';

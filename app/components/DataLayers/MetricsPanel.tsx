@@ -25,87 +25,134 @@ export default function MetricsPanel({
   isLoading 
 }: MetricsPanelProps) {
   
-  const renderMedicaidMetrics = () => (
-    <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Statewide Medicaid Overview</h3>
-      <div className="grid grid-cols-1 gap-3">
-        <div className="bg-blue-50 p-3 rounded border border-blue-200">
-          <div className="text-sm font-medium text-blue-900">Total Enrollment</div>
-          <div className="text-lg font-bold text-blue-800">
-            {healthcareData.reduce((sum, d) => sum + (d.medicaid_total_enrollment || 0), 0).toLocaleString()}
-          </div>
-          <div className="text-xs text-blue-600">Active Medicaid beneficiaries</div>
-        </div>
-        
-        <div className="bg-green-50 p-3 rounded border border-green-200">
-          <div className="text-sm font-medium text-green-900">Expansion Enrollment</div>
-          <div className="text-lg font-bold text-green-800">
-            {healthcareData.reduce((sum, d) => sum + (d.medicaid_expansion_enrollment || 0), 0).toLocaleString()}
-          </div>
-          <div className="text-xs text-green-600">Post-2014 expansion enrollees</div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-2">
-          <div className="bg-orange-50 p-2 rounded border text-center">
-            <div className="text-xs text-orange-700 font-medium">High Enrollment Counties</div>
-            <div className="text-sm font-bold text-orange-800">
-              {healthcareData.filter(d => d.medicaid_enrollment_rate && d.medicaid_enrollment_rate >= 30).length}
-            </div>
-            <div className="text-xs text-orange-600">≥30% rate</div>
-          </div>
-          <div className="bg-gray-50 p-2 rounded border text-center">
-            <div className="text-xs text-gray-700 font-medium">All Counties</div>
-            <div className="text-sm font-bold text-gray-800">100</div>
-            <div className="text-xs text-gray-600">NC total</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  // Calculate consistent statewide metrics
+  const getStatewideMetrics = () => {
+    const validCounties = healthcareData.filter(d => d.medicaid_total_enrollment !== null && d.medicaid_total_enrollment !== undefined);
+    const totalEnrollment = validCounties.reduce((sum, d) => sum + (d.medicaid_total_enrollment || 0), 0);
+    const totalExpansionEnrollment = validCounties.reduce((sum, d) => sum + (d.medicaid_expansion_enrollment || 0), 0);
+    const highEnrollmentCounties = validCounties.filter(d => d.medicaid_enrollment_rate && d.medicaid_enrollment_rate >= 30).length;
+    
+    return {
+      totalEnrollment,
+      totalExpansionEnrollment,
+      highEnrollmentCounties,
+      countiesWithData: validCounties.length
+    };
+  };
 
-  const renderSVIMetrics = () => (
-    <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-900">Social Vulnerability Overview</h3>
-      <div className="grid grid-cols-1 gap-3">
-        <div className="bg-red-50 p-3 rounded border border-red-200">
-          <div className="text-sm font-medium text-red-900">High Vulnerability</div>
-          <div className="text-lg font-bold text-red-800">
-            {healthcareData.filter(d => d.svi_data?.svi_overall_percentile && d.svi_data.svi_overall_percentile >= 0.75).length}
-          </div>
-          <div className="text-xs text-red-600">Counties ≥75th percentile</div>
-        </div>
-        
-        <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
-          <div className="text-sm font-medium text-yellow-900">Moderate Vulnerability</div>
-          <div className="text-lg font-bold text-yellow-800">
-            {healthcareData.filter(d => d.svi_data?.svi_overall_percentile && 
-              d.svi_data.svi_overall_percentile >= 0.5 && d.svi_data.svi_overall_percentile < 0.75).length}
-          </div>
-          <div className="text-xs text-yellow-600">50th-74th percentile</div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-2">
-          <div className="bg-green-50 p-2 rounded border text-center">
-            <div className="text-xs text-green-700 font-medium">Low Vulnerability</div>
-            <div className="text-sm font-bold text-green-800">
-              {healthcareData.filter(d => d.svi_data?.svi_overall_percentile && d.svi_data.svi_overall_percentile < 0.5).length}
+  const renderMedicaidMetrics = () => {
+    const metrics = getStatewideMetrics();
+    
+    return (
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-gray-900">Statewide Medicaid Overview</h3>
+        <div className="grid grid-cols-1 gap-3">
+          <div className="bg-blue-50 p-3 rounded border border-blue-200">
+            <div className="text-sm font-medium text-blue-900">Total Enrollment</div>
+            <div className="text-lg font-bold text-blue-800">
+              {metrics.totalEnrollment.toLocaleString()}
             </div>
-            <div className="text-xs text-green-600">&lt;50th percentile</div>
+            <div className="text-xs text-blue-600">Active Medicaid beneficiaries</div>
           </div>
-          <div className="bg-gray-50 p-2 rounded border text-center">
-            <div className="text-xs text-gray-700 font-medium">Data Available</div>
-            <div className="text-sm font-bold text-gray-800">
-              {healthcareData.filter(d => d.svi_data?.svi_overall_percentile).length}
+          
+          <div className="bg-green-50 p-3 rounded border border-green-200">
+            <div className="text-sm font-medium text-green-900">Expansion Enrollment</div>
+            <div className="text-lg font-bold text-green-800">
+              {metrics.totalExpansionEnrollment.toLocaleString()}
             </div>
-            <div className="text-xs text-gray-600">Counties</div>
+            <div className="text-xs text-green-600">Post-2014 expansion enrollees</div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-orange-50 p-2 rounded border text-center">
+              <div className="text-xs text-orange-700 font-medium">High Enrollment Counties</div>
+              <div className="text-sm font-bold text-orange-800">
+                {metrics.highEnrollmentCounties}
+              </div>
+              <div className="text-xs text-orange-600">≥30% rate</div>
+            </div>
+            <div className="bg-gray-50 p-2 rounded border text-center">
+              <div className="text-xs text-gray-700 font-medium">Counties w/ Data</div>
+              <div className="text-sm font-bold text-gray-800">{metrics.countiesWithData}</div>
+              <div className="text-xs text-gray-600">of 100 NC counties</div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
+
+  // Calculate consistent SVI metrics
+  const getSVIMetrics = () => {
+    const countiesWithSVI = healthcareData.filter(d => d.svi_data?.svi_overall_percentile !== null && d.svi_data?.svi_overall_percentile !== undefined);
+    const highVulnerability = countiesWithSVI.filter(d => d.svi_data!.svi_overall_percentile >= 0.75).length;
+    const moderateVulnerability = countiesWithSVI.filter(d => 
+      d.svi_data!.svi_overall_percentile >= 0.5 && d.svi_data!.svi_overall_percentile < 0.75).length;
+    const lowVulnerability = countiesWithSVI.filter(d => d.svi_data!.svi_overall_percentile < 0.5).length;
+    
+    return {
+      high: highVulnerability,
+      moderate: moderateVulnerability,
+      low: lowVulnerability,
+      total: countiesWithSVI.length
+    };
+  };
+
+  const renderSVIMetrics = () => {
+    const metrics = getSVIMetrics();
+    
+    return (
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-gray-900">Social Vulnerability Overview</h3>
+        <div className="grid grid-cols-1 gap-3">
+          <div className="bg-red-50 p-3 rounded border border-red-200">
+            <div className="text-sm font-medium text-red-900">High Vulnerability</div>
+            <div className="text-lg font-bold text-red-800">
+              {metrics.high}
+            </div>
+            <div className="text-xs text-red-600">Counties ≥75th percentile</div>
+          </div>
+          
+          <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
+            <div className="text-sm font-medium text-yellow-900">Moderate Vulnerability</div>
+            <div className="text-lg font-bold text-yellow-800">
+              {metrics.moderate}
+            </div>
+            <div className="text-xs text-yellow-600">50th-74th percentile</div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-green-50 p-2 rounded border text-center">
+              <div className="text-xs text-green-700 font-medium">Low Vulnerability</div>
+              <div className="text-sm font-bold text-green-800">
+                {metrics.low}
+              </div>
+              <div className="text-xs text-green-600">&lt;50th percentile</div>
+            </div>
+            <div className="bg-gray-50 p-2 rounded border text-center">
+              <div className="text-xs text-gray-700 font-medium">Data Available</div>
+              <div className="text-sm font-bold text-gray-800">
+                {metrics.total}
+              </div>
+              <div className="text-xs text-gray-600">Counties</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const renderHospitalMetrics = () => {
-    if (!metricsData) return null;
+    if (!metricsData) {
+      return (
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-gray-900">Hospital Infrastructure</h3>
+          <div className="bg-gray-50 p-4 rounded border text-center">
+            <div className="text-sm text-gray-500">Loading hospital data...</div>
+          </div>
+        </div>
+      );
+    }
     
     return (
       <div className="space-y-3">
@@ -113,32 +160,32 @@ export default function MetricsPanel({
         <div className="grid grid-cols-1 gap-3">
           <div className="bg-blue-50 p-3 rounded border border-blue-200">
             <div className="text-sm font-medium text-blue-900">Total Facilities</div>
-            <div className="text-lg font-bold text-blue-800">{metricsData.totalCount}</div>
+            <div className="text-lg font-bold text-blue-800">{metricsData.totalCount || 0}</div>
             <div className="text-xs text-blue-600">Licensed healthcare facilities</div>
           </div>
           
           <div className="bg-indigo-50 p-3 rounded border border-indigo-200">
             <div className="text-sm font-medium text-indigo-900">Licensed Bed Capacity</div>
-            <div className="text-lg font-bold text-indigo-800">{metricsData.totalBeds?.toLocaleString()}</div>
+            <div className="text-lg font-bold text-indigo-800">{(metricsData.totalBeds || 0).toLocaleString()}</div>
             <div className="text-xs text-indigo-600">Total inpatient beds</div>
           </div>
           
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-green-50 p-2 rounded border text-center">
               <div className="text-xs text-green-700 font-medium">Major Hospitals</div>
-              <div className="text-sm font-bold text-green-800">{metricsData.majorFacilities}</div>
+              <div className="text-sm font-bold text-green-800">{metricsData.majorFacilities || 0}</div>
               <div className="text-xs text-green-600">≥100 beds</div>
             </div>
             <div className="bg-red-50 p-2 rounded border text-center">
               <div className="text-xs text-red-700 font-medium">Emergency Depts</div>
-              <div className="text-sm font-bold text-red-800">{metricsData.emergencyDepts}</div>
+              <div className="text-sm font-bold text-red-800">{metricsData.emergencyDepts || 0}</div>
               <div className="text-xs text-red-600">Standalone EDs</div>
             </div>
           </div>
           
           <div className="bg-gray-50 p-2 rounded border text-center">
             <div className="text-xs text-gray-700 font-medium">Avg Beds per Hospital</div>
-            <div className="text-sm font-bold text-gray-800">{metricsData.averageBedsPerHospital}</div>
+            <div className="text-sm font-bold text-gray-800">{metricsData.averageBedsPerHospital || 0}</div>
             <div className="text-xs text-gray-600">State average</div>
           </div>
         </div>
