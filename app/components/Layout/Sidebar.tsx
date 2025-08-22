@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import MedicaidToggle from '../Index/MedicaidToggle';
 import CountyDetailPanel from '../County/CountyDetailPanel';
 import CountyHoverPanel from '../County/CountyHoverPanel';
 import DataUpdatePanelFixed from './DataUpdatePanelFixed';
@@ -79,7 +78,7 @@ export default function Sidebar({
           </div>
 
           {/* Sidebar content */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-4 relative z-40">
+          <div className="flex-1 overflow-y-auto p-3 space-y-4">
             
             {/* County Detail Panel - shows when county is selected */}
             {selectedCounty && onCountyDeselect && (
@@ -105,11 +104,6 @@ export default function Sidebar({
               />
             )}
 
-            {/* SVI Toggle */}
-            <MedicaidToggle 
-              isEnabled={medicaidEnabled}
-              onToggle={onMedicaidToggle}
-            />
 
             {/* Data Update Panel */}
             <DataUpdatePanelFixed />

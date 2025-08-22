@@ -80,7 +80,7 @@ export default function DataUpdatePanelFixed() {
         )}
         
         <div className="text-xs text-gray-500">
-          {lastUpdated ? `Updated: ${lastUpdated.toLocaleDateString()}` : 'Click to update from CSV files'}
+          {lastUpdated ? `Updated: ${lastUpdated.toLocaleDateString()}` : 'Click to refresh from Supabase database'}
         </div>
       </div>
     </div>

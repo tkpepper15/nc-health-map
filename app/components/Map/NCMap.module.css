@@ -115,7 +115,7 @@
 
 /* Popup styling */
 .mapContainer :global(.leaflet-popup) {
-  z-index: 15 !important; /* Above zoom controls, below UI overlays */
+  z-index: 1000 !important; /* Above all UI elements when popup is open */
 }
 
 .mapContainer :global(.leaflet-popup-content-wrapper) {
@@ -124,7 +124,7 @@
   box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   border: 1px solid #e5e7eb;
   padding: 0;
-  z-index: 15 !important;
+  z-index: 1000 !important;
 }
 
 .mapContainer :global(.leaflet-popup-content) {

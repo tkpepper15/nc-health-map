@@ -25,7 +25,7 @@ export default function MainContent({ children, sidebarOpen, onSidebarToggle }: 
       </div>
 
       {/* Desktop sidebar toggle button */}
-      <div className="hidden lg:block absolute top-4 left-4 z-40">
+      <div className="hidden lg:block absolute top-4 left-4 z-30">
         <button
           onClick={onSidebarToggle}
           className="bg-white shadow-lg rounded-lg p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"

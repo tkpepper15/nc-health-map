@@ -467,13 +467,19 @@ export default function NCLeafletMap({
 
   // Add hospital markers to the map
   const addHospitalMarkers = () => {
-    if (!mapRef.current || !L || !hospitals.length || currentLayer !== 'hospitals') {
+    if (!mapRef.current || !L) {
       return;
     }
 
-    // Clear existing hospital markers
+    // Always clear existing hospital markers first
     if ((window as any).hospitalMarkersLayer) {
       mapRef.current.removeLayer((window as any).hospitalMarkersLayer);
+      (window as any).hospitalMarkersLayer = null;
+    }
+
+    // Only add markers if we're on the hospital layer and have hospital data
+    if (!hospitals.length || currentLayer !== 'hospitals') {
+      return;
     }
 
     // Create a layer group for hospital markers
