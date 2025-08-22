@@ -42,7 +42,7 @@ export default function SimpleMap({
     const data = healthcareData.find(d => d.countyId === countyId);
     if (!data) return '#e5e7eb';
     
-    const value = getLayerValue(selectedMetric, data);
+    const value = getLayerValue(data, selectedMetric);
     return getLayerColor(selectedMetric, value);
   };
 

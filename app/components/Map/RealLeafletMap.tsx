@@ -105,7 +105,7 @@ export default function RealLeafletMap({
           let fillColor = '#e5e7eb';
           
           if (data) {
-            const value = getLayerValue(selectedMetric, data);
+            const value = getLayerValue(data, selectedMetric);
             fillColor = getLayerColor(selectedMetric, value);
           }
 
@@ -225,7 +225,7 @@ export default function RealLeafletMap({
         let fillColor = '#e5e7eb';
         
         if (data) {
-          const value = getLayerValue(selectedMetric, data);
+          const value = getLayerValue(data, selectedMetric);
           fillColor = getLayerColor(selectedMetric, value);
         }
 

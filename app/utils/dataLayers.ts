@@ -35,7 +35,7 @@ export const DATA_LAYERS: Record<string, MetricLayer> = {
     id: 'svi',
     name: 'Social Vulnerability',
     description: 'CDC Social Vulnerability Index percentiles',
-    category: 'vulnerability',
+    category: 'social',
     colorScale: {
       type: 'sequential',
       colors: ['#22c55e', '#84cc16', '#eab308', '#f97316', '#dc2626'],

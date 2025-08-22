@@ -47,69 +47,9 @@ export default function MapLegend({ selectedMetric }: MapLegendProps) {
     ]
   });
 
-  const getHCVILegend = () => ({
-    title: 'Healthcare Vulnerability Index',
-    subtitle: 'Composite HCVI score (1-10 scale)',
-    items: [
-      { color: '#dc2626', label: 'Extreme Risk', range: '≥ 7.5' },
-      { color: '#ef4444', label: 'High Risk', range: '5.5-7.4' },
-      { color: '#f59e0b', label: 'Moderate Risk', range: '3.5-5.4' },
-      { color: '#22c55e', label: 'Low Risk', range: '< 3.5' },
-      { color: '#e5e7eb', label: 'No Data', range: 'N/A' }
-    ] as LegendItem[],
-    footer: [
-      '🎯 Combines healthcare access, policy risk, economic factors',
-      'Higher scores indicate greater vulnerability'
-    ]
-  });
 
-  const getHealthcareAccessLegend = () => ({
-    title: 'Healthcare Access Score',
-    subtitle: 'Provider availability and accessibility',
-    items: [
-      { color: '#dc2626', label: 'Poor Access', range: '≥ 7.0' },
-      { color: '#f97316', label: 'Limited Access', range: '5.0-6.9' },
-      { color: '#fbbf24', label: 'Moderate Access', range: '3.0-4.9' },
-      { color: '#22c55e', label: 'Good Access', range: '< 3.0' },
-      { color: '#e5e7eb', label: 'No Data', range: 'N/A' }
-    ] as LegendItem[],
-    footer: [
-      '📊 Real HCVI component data available',
-      '⚠️ Provider/travel time details: Not available'
-    ]
-  });
 
-  const getPolicyRiskLegend = () => ({
-    title: 'Policy Risk Score',
-    subtitle: 'Federal funding vulnerability',
-    items: [
-      { color: '#dc2626', label: 'High Risk', range: '≥ 7.0' },
-      { color: '#f97316', label: 'Moderate-High Risk', range: '5.0-6.9' },
-      { color: '#fbbf24', label: 'Moderate Risk', range: '3.0-4.9' },
-      { color: '#22c55e', label: 'Low Risk', range: '< 3.0' },
-      { color: '#e5e7eb', label: 'No Data', range: 'N/A' }
-    ] as LegendItem[],
-    footer: [
-      '⚖️ Medicaid dependency, federal funding reliance, SNAP exposure',
-      'Higher scores indicate greater policy vulnerability'
-    ]
-  });
 
-  const getEconomicVulnerabilityLegend = () => ({
-    title: 'Economic Vulnerability Score',
-    subtitle: 'Financial health indicators',
-    items: [
-      { color: '#dc2626', label: 'High Vulnerability', range: '≥ 7.0' },
-      { color: '#f97316', label: 'Moderate-High', range: '5.0-6.9' },
-      { color: '#fbbf24', label: 'Moderate', range: '3.0-4.9' },
-      { color: '#22c55e', label: 'Low Vulnerability', range: '< 3.0' },
-      { color: '#e5e7eb', label: 'No Data', range: 'N/A' }
-    ] as LegendItem[],
-    footer: [
-      '💰 Hospital finances, private equity, employment, social factors',
-      'Higher scores indicate greater economic vulnerability'
-    ]
-  });
 
   const getHospitalLegend = () => ({
     title: 'Hospital Infrastructure',
@@ -129,22 +69,14 @@ export default function MapLegend({ selectedMetric }: MapLegendProps) {
 
   const getCurrentLegend = () => {
     switch (selectedMetric) {
-      case 'hcvi':
-        return getHCVILegend();
       case 'medicaid':
         return getMedicaidLegend();
-      case 'healthcare-access':
-        return getHealthcareAccessLegend();
-      case 'policy-risk':
-        return getPolicyRiskLegend();
-      case 'economic-vulnerability':
-        return getEconomicVulnerabilityLegend();
       case 'svi':
         return getSVILegend();
       case 'hospitals':
         return getHospitalLegend();
       default:
-        return getHCVILegend();
+        return getMedicaidLegend();
     }
   };
 

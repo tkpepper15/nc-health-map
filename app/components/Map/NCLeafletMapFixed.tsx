@@ -48,7 +48,7 @@ export default function NCLeafletMapFixed({
   counties,
   healthcareData,
   hospitals = [],
-  currentLayer = 'hcvi',
+  currentLayer = 'medicaid',
   medicaidEnabled,
   onCountyClick,
   selectedCounty
@@ -126,78 +126,6 @@ export default function NCLeafletMapFixed({
           } else if (sviPercentile >= 50) {
             fillColor = '#f97316';  // Moderate-High SVI - Orange
             fillOpacity = 0.75;
-          }
-        }
-      } else if (currentLayer === 'hcvi') {
-        // Color by Overall HCVI Composite Score
-        const hcviScore = healthData.hcvi_composite;
-        if (hcviScore !== null && hcviScore !== undefined) {
-          if (hcviScore >= 7.5) {
-            fillColor = '#dc2626';  // Extreme - Dark Red
-            fillOpacity = 0.9;
-          } else if (hcviScore >= 5.5) {
-            fillColor = '#ef4444';  // High - Red
-            fillOpacity = 0.8;
-          } else if (hcviScore >= 3.5) {
-            fillColor = '#f59e0b';  // Moderate - Amber
-            fillOpacity = 0.7;
-          } else {
-            fillColor = '#22c55e';  // Low - Green
-            fillOpacity = 0.6;
-          }
-        }
-      } else if (currentLayer === 'healthcare-access') {
-        // Color by Healthcare Access Score
-        const accessScore = healthData.healthcare_access_score;
-        if (accessScore !== null && accessScore !== undefined) {
-          if (accessScore >= 7) {
-            fillColor = '#dc2626';  // Poor access - Red
-            fillOpacity = 0.8;
-          } else if (accessScore >= 5) {
-            fillColor = '#f97316';  // Limited access - Orange
-            fillOpacity = 0.75;
-          } else if (accessScore >= 3) {
-            fillColor = '#fbbf24';  // Moderate access - Yellow
-            fillOpacity = 0.7;
-          } else {
-            fillColor = '#22c55e';  // Good access - Green
-            fillOpacity = 0.65;
-          }
-        }
-      } else if (currentLayer === 'policy-risk') {
-        // Color by Policy Risk Score
-        const policyRisk = healthData.policy_risk_score;
-        if (policyRisk !== null && policyRisk !== undefined) {
-          if (policyRisk >= 7) {
-            fillColor = '#dc2626';  // High risk - Red
-            fillOpacity = 0.8;
-          } else if (policyRisk >= 5) {
-            fillColor = '#f97316';  // Moderate-High risk - Orange
-            fillOpacity = 0.75;
-          } else if (policyRisk >= 3) {
-            fillColor = '#fbbf24';  // Moderate risk - Yellow
-            fillOpacity = 0.7;
-          } else {
-            fillColor = '#22c55e';  // Low risk - Green
-            fillOpacity = 0.65;
-          }
-        }
-      } else if (currentLayer === 'economic-vulnerability') {
-        // Color by Economic Vulnerability Score
-        const economicScore = healthData.economic_vulnerability_score;
-        if (economicScore !== null && economicScore !== undefined) {
-          if (economicScore >= 7) {
-            fillColor = '#dc2626';  // High vulnerability - Red
-            fillOpacity = 0.8;
-          } else if (economicScore >= 5) {
-            fillColor = '#f97316';  // Moderate-High vulnerability - Orange
-            fillOpacity = 0.75;
-          } else if (economicScore >= 3) {
-            fillColor = '#fbbf24';  // Moderate vulnerability - Yellow
-            fillOpacity = 0.7;
-          } else {
-            fillColor = '#22c55e';  // Low vulnerability - Green
-            fillOpacity = 0.65;
           }
         }
       } else if (currentLayer === 'svi') {
@@ -311,8 +239,8 @@ export default function NCLeafletMapFixed({
               layer.options.role = 'button';
               layer.options.tabindex = 0;
               layer.options['aria-label'] = `${countyName} County. ${
-                healthData?.hcvi_composite ? 
-                `Healthcare vulnerability score: ${healthData.hcvi_composite.toFixed(1)}` : 
+                healthData?.medicaid_enrollment_rate ? 
+                `Medicaid enrollment rate: ${healthData.medicaid_enrollment_rate.toFixed(1)}%` : 
                 'No healthcare data available'
               }. Click to view details.`;
               

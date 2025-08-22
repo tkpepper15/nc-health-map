@@ -252,25 +252,9 @@ export default function NCLeafletMap({
 
     if (healthData) {
       switch (currentLayer) {
-        case 'hcvi':
-          fillColor = getHCVIColor(healthData.hcvi_composite);
-          fillOpacity = 0.8;
-          break;
         case 'medicaid':
           fillColor = getMedicaidColor(healthData.medicaid_enrollment_rate);
           fillOpacity = medicaidEnabled ? 0.9 : 0.7;
-          break;
-        case 'healthcare-access':
-          fillColor = getHealthcareAccessColor(healthData.healthcare_access_score);
-          fillOpacity = 0.8;
-          break;
-        case 'policy-risk':
-          fillColor = getPolicyRiskColor(healthData.policy_risk_score);
-          fillOpacity = 0.8;
-          break;
-        case 'economic-vulnerability':
-          fillColor = getEconomicVulnerabilityColor(healthData.economic_vulnerability_score);
-          fillOpacity = 0.8;
           break;
         case 'svi':
           fillColor = getSVIColor(healthData.svi_data?.svi_overall_percentile);
@@ -282,7 +266,7 @@ export default function NCLeafletMap({
           fillOpacity = 0.3;
           break;
         default:
-          fillColor = getHCVIColor(healthData.hcvi_composite);
+          fillColor = getMedicaidColor(healthData.medicaid_enrollment_rate);
           fillOpacity = 0.8;
       }
     }
@@ -297,13 +281,6 @@ export default function NCLeafletMap({
   };
 
   // Color functions for different data layers
-  const getHCVIColor = (score?: number | null) => {
-    if (!score) return '#e5e7eb';
-    if (score >= 7.5) return '#dc2626'; // Extreme
-    if (score >= 5.5) return '#ef4444'; // High
-    if (score >= 3.5) return '#f59e0b'; // Moderate
-    return '#22c55e'; // Low
-  };
 
   const getMedicaidColor = (rate?: number | null) => {
     if (!rate) return '#e5e7eb';
@@ -314,29 +291,8 @@ export default function NCLeafletMap({
     return '#dbeafe'; // Very Low
   };
 
-  const getHealthcareAccessColor = (score?: number | null) => {
-    if (!score) return '#e5e7eb';
-    if (score >= 7.0) return '#dc2626'; // Poor
-    if (score >= 5.0) return '#f97316'; // Limited
-    if (score >= 3.0) return '#fbbf24'; // Moderate
-    return '#22c55e'; // Good
-  };
 
-  const getPolicyRiskColor = (score?: number | null) => {
-    if (!score) return '#e5e7eb';
-    if (score >= 7.0) return '#dc2626'; // High Risk
-    if (score >= 5.0) return '#f97316'; // Moderate-High
-    if (score >= 3.0) return '#fbbf24'; // Moderate
-    return '#22c55e'; // Low Risk
-  };
 
-  const getEconomicVulnerabilityColor = (score?: number | null) => {
-    if (!score) return '#e5e7eb';
-    if (score >= 7.0) return '#dc2626'; // High
-    if (score >= 5.0) return '#f97316'; // Moderate-High
-    if (score >= 3.0) return '#fbbf24'; // Moderate
-    return '#22c55e'; // Low
-  };
 
   const getSVIColor = (percentile?: number | null) => {
     if (!percentile) return '#e5e7eb';

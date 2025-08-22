@@ -142,7 +142,7 @@ export interface MetricLayer {
   id: string;
   name: string;
   description: string;
-  category: 'healthcare-access' | 'policy-risk' | 'economic-vulnerability' | 'composite';
+  category: 'healthcare' | 'social' | 'infrastructure' | 'composite';
   colorScale: {
     type: 'sequential' | 'diverging' | 'categorical';
     colors: string[];

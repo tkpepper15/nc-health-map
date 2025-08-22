@@ -5,7 +5,7 @@ import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
 import MainContent from './components/Layout/MainContent';
 import NCLeafletMap from './components/Map/NCLeafletMap';
-import DataLayerSelector from './components/DataLayers/DataLayerSelector';
+import DataLayerSelector, { DataLayer } from './components/DataLayers/DataLayerSelector';
 import DataLayerDescription from './components/DataLayers/DataLayerDescription';
 import MetricsPanel from './components/DataLayers/MetricsPanel';
 import DataSourceIndicator from './components/UI/DataSourceIndicator';
@@ -57,7 +57,7 @@ export default function Home() {
   } = useUnifiedHospitalData();
 
   // Layer management
-  const [currentLayer, setCurrentLayer] = useState<'hcvi' | 'medicaid' | 'healthcare-access' | 'policy-risk' | 'economic-vulnerability' | 'svi' | 'hospitals'>('hcvi');
+  const [currentLayer, setCurrentLayer] = useState<DataLayer>('medicaid');
 
   const handleMedicaidToggle = (enabled: boolean) => {
     setMedicaidEnabled(enabled);
@@ -216,7 +216,7 @@ export default function Home() {
                       {(() => {
                         const validCounties = healthcareData.filter(d => d.medicaid_enrollment_rate !== null && d.medicaid_enrollment_rate !== undefined);
                         return validCounties.length > 0 ? 
-                          (validCounties.reduce((sum, d) => sum + d.medicaid_enrollment_rate, 0) / validCounties.length).toFixed(1) + '%'
+                          (validCounties.reduce((sum, d) => sum + (d.medicaid_enrollment_rate || 0), 0) / validCounties.length).toFixed(1) + '%'
                           : 'N/A';
                       })()}
                     </p>

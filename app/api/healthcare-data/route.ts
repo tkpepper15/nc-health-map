@@ -53,17 +53,12 @@ export async function GET(request: NextRequest) {
           }));
         }
       } catch (fileError) {
-        console.log('No processed data found, falling back to mock data');
-        // Fallback to mock data
-        const { mockHealthcareData } = await import('../../data/healthcareData');
-        data = mockHealthcareData;
-        dataSource = 'mock';
-        
-        // Apply same filters to mock data
-        if (counties) {
-          const countyList = counties.split(',').map(c => c.trim());
-          data = data.filter((item: any) => countyList.includes(item.fips_code));
-        }
+        console.log('No processed data found, no fallback available');
+        // No fallback data available
+        return NextResponse.json({
+          error: 'No healthcare data available',
+          message: 'Database connection failed and no processed data files found'
+        }, { status: 503 });
       }
     } else {
       data = dbResult.data;

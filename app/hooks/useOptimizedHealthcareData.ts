@@ -252,35 +252,15 @@ export function useOptimizedHealthcareData() {
         console.log('📂 Falling back to local data for development...');
       }
 
-      // Fallback to local data
-      const { mockHealthcareData } = await import('../data/healthcareData');
-      const geoResponse = await fetch('/data/nc-counties.json');
-      const ncCountiesGeoJSON = await geoResponse.json();
-      
-      const countiesData: County[] = ncCountiesGeoJSON.features.map((feature: any) => {
-        const countyFips = feature.properties?.FIPS || feature.properties?.fips || '';
-        const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
-        return {
-          id: fullFips,
-          name: feature.properties?.NAME || feature.properties?.name || feature.properties?.CountyName || '',
-          fips: fullFips,
-          geometry: feature.geometry as any,
-          properties: {
-            name: feature.properties?.NAME || feature.properties?.name || '',
-            population: feature.properties?.population || 0,
-            area: feature.properties?.area || 0,
-            classification: (feature.properties?.classification as 'urban' | 'rural' | 'frontier') || 'rural'
-          }
-        };
-      });
-
-      console.log('⚠️ Using fallback mock data');
+      // No fallback data available - set error state
+      console.log('❌ No fallback data available after Supabase failure');
+      setError('Unable to connect to database and no local data available');
       
       setData(prev => ({
-        healthcareData: mockHealthcareData as HealthcareMetrics[],
-        counties: countiesData,
-        lastUpdated: null, // null indicates local data
-        updateInProgress: prev.updateInProgress
+        healthcareData: [],
+        counties: [],
+        lastUpdated: null,
+        updateInProgress: false
       }));
       
     } catch (err) {
