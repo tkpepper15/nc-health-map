@@ -11,7 +11,6 @@ import MetricsPanel from './components/DataLayers/MetricsPanel';
 import DataSourceIndicator from './components/UI/DataSourceIndicator';
 import { useHealthcareStore } from './utils/store';
 import { useOptimizedHealthcareData } from './hooks/useOptimizedHealthcareData';
-import { useUnifiedHospitalData } from './hooks/useUnifiedHospitalData';
 import { County } from './types/healthcare';
 
 export default function Home() {
@@ -49,12 +48,16 @@ export default function Home() {
     refresh 
   } = useOptimizedHealthcareData();
   
-  // Use unified hospital data
-  const { 
-    hospitals, 
-    loading: hospitalsLoading,
-    getHospitalStats
-  } = useUnifiedHospitalData();
+  // Hospital data placeholder - will be implemented with real data later
+  const hospitals = [];
+  const hospitalsLoading = false;
+  const getHospitalStats = () => ({
+    totalCount: 0,
+    majorFacilities: 0,
+    emergencyDepts: 0,
+    totalBeds: 0,
+    averageBedsPerHospital: 0
+  });
 
   // Layer management
   const [currentLayer, setCurrentLayer] = useState<DataLayer>('medicaid');
