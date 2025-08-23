@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         if (aggregated) {
           data = (data as HealthcareMetrics[]).map((item: HealthcareMetrics) => ({
             fips_code: item.fips_code,
-            county_name: item.countyName || item.countyName,
+            county_name: item.countyName,
             hcvi_composite: item.hcvi_composite,
             vulnerability_category: item.vulnerability_category,
             vulnerability_color: getVulnerabilityColor(item.vulnerability_category),
@@ -129,7 +129,7 @@ function convertToCSV(data: HealthcareMetrics[]): string {
   
   for (const row of data) {
     const values = headers.map(header => {
-      const value = row[header];
+      const value = (row as unknown as Record<string, unknown>)[header];
       // Escape commas and quotes in CSV
       if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
         return `"${value.replace(/"/g, '""')}"`;

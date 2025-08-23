@@ -194,7 +194,7 @@ function convertToCSV(data: HospitalData[]): string {
   
   for (const row of data) {
     const values = headers.map(header => {
-      const value = row[header];
+      const value = (row as unknown as Record<string, unknown>)[header];
       // Escape commas and quotes in CSV
       if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
         return `"${value.replace(/"/g, '""')}"`;
