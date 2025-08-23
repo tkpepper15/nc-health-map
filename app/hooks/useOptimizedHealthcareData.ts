@@ -274,6 +274,7 @@ export function useOptimizedHealthcareData() {
   // Initial data fetch only
   useEffect(() => {
     fetchProcessedData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array - only run once on mount
 
   // Optional: Auto-refresh every 5 minutes (disabled by default to prevent spam)

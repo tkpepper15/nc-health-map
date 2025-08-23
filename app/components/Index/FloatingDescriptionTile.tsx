@@ -3,12 +3,6 @@
 import React from 'react';
 import { DataLayer } from '../DataLayers/DataLayerSelector';
 
-interface LegendItem {
-  label: string;
-  color: string;
-  range: string;
-}
-
 interface FloatingDescriptionTileProps {
   currentLayer: DataLayer;
 }

@@ -1,9 +1,45 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
 
+interface MedicaidData {
+  fips_code: string;
+  county_name: string;
+  population_2020: number;
+  medicaid_total_enrollment: number;
+  medicaid_expansion_enrollment: number;
+  medicaid_traditional_enrollment: number;
+  medicaid_enrollment_rate: number;
+  medicaid_dependency_ratio: number;
+}
+
+interface SVIData {
+  fips_code: string;
+  county_name: string;
+  socioeconomic_percentile: number;
+  household_composition_percentile: number;
+  racial_minority_percentile: number;
+  housing_transport_percentile: number;
+  svi_overall_percentile: number;
+  poverty_150_pct: number;
+  unemployment_pct: number;
+  housing_burden_pct: number;
+  no_highschool_pct: number;
+  no_insurance_pct: number;
+}
+
+interface CombinedData extends MedicaidData {
+  healthcare_access_score: number;
+  policy_risk_score: number;
+  economic_vulnerability_score: number;
+  hcvi_composite: number;
+  vulnerability_category: string;
+  svi_data: SVIData | undefined;
+  last_updated: string;
+}
+
 // This endpoint triggers processing of raw CSV data
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     console.log('Starting data processing...');
     
@@ -71,12 +107,12 @@ export async function POST(request: NextRequest) {
 }
 
 // Process Medicaid CSV data
-async function processMedicaidData(filePath: string) {
+async function processMedicaidData(filePath: string): Promise<MedicaidData[]> {
   const csvContent = await fs.readFile(filePath, 'utf-8');
   const lines = csvContent.trim().split('\n');
   const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
   
-  const medicaidData = [];
+  const medicaidData: MedicaidData[] = [];
   
   for (let i = 1; i < lines.length; i++) {
     const values = parseCSVLine(lines[i]);
@@ -95,7 +131,7 @@ async function processMedicaidData(filePath: string) {
     const population = getCountyPopulation(county);
     
     medicaidData.push({
-      countyName: county,
+      county_name: county,
       fips_code: fipsCode,
       medicaid_total_enrollment: totalEnrollment,
       medicaid_expansion_enrollment: expansionEnrollment,
@@ -150,7 +186,7 @@ async function processSVIData(filePath: string) {
 }
 
 // Combine data and calculate HCVI composite scores
-function combineAndCalculateHCVI(medicaidData: any[], sviData: any[]) {
+function combineAndCalculateHCVI(medicaidData: MedicaidData[], sviData: SVIData[]): CombinedData[] {
   return medicaidData.map(medicaid => {
     const svi = sviData.find(s => s.fips_code === medicaid.fips_code);
     
@@ -187,7 +223,7 @@ function combineAndCalculateHCVI(medicaidData: any[], sviData: any[]) {
 }
 
 // Calculate healthcare access score (simplified)
-function calculateHealthcareAccessScore(medicaid: any, svi: any): number {
+function calculateHealthcareAccessScore(medicaid: MedicaidData, svi: SVIData | undefined): number {
   // Use SVI data and population characteristics to estimate healthcare access
   const populationDensity = medicaid.population_2020 > 100000 ? 8 : medicaid.population_2020 > 50000 ? 5 : 3;
   const socioeconomicFactor = svi ? (1 - svi.socioeconomic_percentile) * 10 : 5;
@@ -197,7 +233,7 @@ function calculateHealthcareAccessScore(medicaid: any, svi: any): number {
 }
 
 // Calculate policy risk score
-function calculatePolicyRiskScore(medicaid: any, svi: any): number {
+function calculatePolicyRiskScore(medicaid: MedicaidData, svi: SVIData | undefined): number {
   const medicaidDependency = Math.min(10, medicaid.medicaid_dependency_ratio * 20);
   const expansionRisk = medicaid.medicaid_expansion_enrollment > 0 ? 
     Math.min(10, (medicaid.medicaid_expansion_enrollment / medicaid.medicaid_total_enrollment) * 12) : 0;
@@ -207,7 +243,7 @@ function calculatePolicyRiskScore(medicaid: any, svi: any): number {
 }
 
 // Calculate economic vulnerability score
-function calculateEconomicVulnerabilityScore(medicaid: any, svi: any): number {
+function calculateEconomicVulnerabilityScore(medicaid: MedicaidData, svi: SVIData | undefined): number {
   const populationRisk = medicaid.population_2020 < 50000 ? 8 : 4; // Rural risk
   const socioeconomicRisk = svi ? svi.socioeconomic_percentile * 10 : 5;
   const householdRisk = svi ? svi.household_composition_percentile * 8 : 4;
@@ -216,7 +252,7 @@ function calculateEconomicVulnerabilityScore(medicaid: any, svi: any): number {
 }
 
 // Cache processed data for API consumption
-async function cacheProcessedData(data: any[]) {
+async function cacheProcessedData(data: CombinedData[]) {
   const outputDir = path.join(process.cwd(), 'data', 'processed');
   await fs.mkdir(outputDir, { recursive: true });
   

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface BackendStatus {
   source: 'database' | 'file' | 'mock'
@@ -17,11 +17,7 @@ export default function BackendStatusIndicator() {
   const [isExpanded, setIsExpanded] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    checkBackendStatus()
-  }, [])
-
-  const checkBackendStatus = async () => {
+  const checkBackendStatus = useCallback(async () => {
     const startTime = Date.now()
     try {
       const response = await fetch('/api/healthcare-data?aggregated=true&limit=1')
@@ -51,7 +47,11 @@ export default function BackendStatusIndicator() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    checkBackendStatus()
+  }, [checkBackendStatus])
 
   const determineServerInfo = (metadata: any) => {
     const serverInfo = metadata.server_info || {}

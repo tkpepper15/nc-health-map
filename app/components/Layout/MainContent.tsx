@@ -4,11 +4,10 @@ import { ReactNode } from 'react';
 
 interface MainContentProps {
   children: ReactNode;
-  sidebarOpen?: boolean;
   onSidebarToggle?: () => void;
 }
 
-export default function MainContent({ children, sidebarOpen = false, onSidebarToggle }: MainContentProps) {
+export default function MainContent({ children, onSidebarToggle }: MainContentProps) {
   return (
     <div className="flex-1 flex flex-col relative">
       {/* Mobile header with menu button - only show if sidebar toggle is provided */}

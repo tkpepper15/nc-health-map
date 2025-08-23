@@ -3,6 +3,50 @@ import { getHospitalData } from '../../utils/database';
 import { promises as fs } from 'fs';
 import path from 'path';
 
+interface HospitalData {
+  id: string | number;
+  facility_name: string;
+  alt_name: string;
+  licensee: string;
+  license_number: string;
+  facility_type: string;
+  service_type: string;
+  county: string;
+  city: string;
+  state: string;
+  zip: string;
+  address: string;
+  phone: string;
+  latitude: number;
+  longitude: number;
+  general_beds: number;
+  rehab_beds: number;
+  psych_beds: number;
+  substance_abuse_beds: number;
+  nursing_facility_beds: number;
+  cardiac_surgery_rooms: number;
+  cesarean_rooms: number;
+  ambulatory_surgery_rooms: number;
+  shared_rooms: number;
+  endoscopy_rooms: number;
+  other_surgery_rooms: number;
+  total_beds: number;
+  total_surgery_rooms: number;
+  is_major_hospital: boolean;
+  is_specialty: boolean;
+  is_emergency_dept: boolean;
+  is_ltac: boolean;
+  is_rehab: boolean;
+  last_updated: string;
+}
+
+interface GeoJsonFeature {
+  properties: Record<string, unknown>;
+  geometry: {
+    coordinates: [number, number];
+  };
+}
+
 // GET endpoint to serve hospital data
 export async function GET(request: NextRequest) {
   try {
@@ -28,55 +72,55 @@ export async function GET(request: NextRequest) {
         const geoJson = JSON.parse(fileContent);
         
         // Transform GeoJSON features into flat data structure
-        hospitalsData = geoJson.features.map((feature: any, index: number) => {
+        hospitalsData = geoJson.features.map((feature: GeoJsonFeature, index: number): HospitalData => {
         const props = feature.properties;
         const coords = feature.geometry.coordinates;
         
         return {
-          id: props.objectid || index + 1,
-          facility_name: props.facility || 'Unknown Facility',
-          alt_name: props.altfacname || props.facility,
-          licensee: props.licensee || 'N/A',
-          license_number: props.licno || 'N/A',
-          facility_type: props.hltype || 'Hospital',
-          service_type: props.stype || 'HL',
+          id: (props.objectid as string) || (index + 1).toString(),
+          facility_name: (props.facility as string) || 'Unknown Facility',
+          alt_name: (props.altfacname as string) || (props.facility as string) || 'Unknown',
+          licensee: (props.licensee as string) || 'N/A',
+          license_number: (props.licno as string) || 'N/A',
+          facility_type: (props.hltype as string) || 'Hospital',
+          service_type: (props.stype as string) || 'HL',
           
           // Location data
-          county: props.fcounty || 'Unknown',
-          city: props.fcity || 'Unknown',
-          state: props.fstate || 'NC',
-          zip: props.fzip || 'N/A',
-          address: props.faddr1 || 'N/A',
-          phone: props.fphone || 'N/A',
+          county: (props.fcounty as string) || 'Unknown',
+          city: (props.fcity as string) || 'Unknown',
+          state: (props.fstate as string) || 'NC',
+          zip: (props.fzip as string) || 'N/A',
+          address: (props.faddr1 as string) || 'N/A',
+          phone: (props.fphone as string) || 'N/A',
           latitude: coords[1],
           longitude: coords[0],
           
           // Capacity data (licensed beds)
-          general_beds: props.hgenlic || 0,
-          rehab_beds: props.rehabhlic || 0,
-          psych_beds: props.psylic || 0,
-          substance_abuse_beds: props.salic || 0,
-          nursing_facility_beds: props.nfgenlic || 0,
+          general_beds: (props.hgenlic as number) || 0,
+          rehab_beds: (props.rehabhlic as number) || 0,
+          psych_beds: (props.psylic as number) || 0,
+          substance_abuse_beds: (props.salic as number) || 0,
+          nursing_facility_beds: (props.nfgenlic as number) || 0,
           
           // Operating room data
-          cardiac_surgery_rooms: props.orheart_hl || 0,
-          cesarean_rooms: props.orcsect_hl || 0,
-          ambulatory_surgery_rooms: props.oramsu_hl || 0,
-          shared_rooms: props.orshare_hl || 0,
-          endoscopy_rooms: props.orendo_hl || 0,
-          other_surgery_rooms: props.orother_hl || 0,
+          cardiac_surgery_rooms: (props.orheart_hl as number) || 0,
+          cesarean_rooms: (props.orcsect_hl as number) || 0,
+          ambulatory_surgery_rooms: (props.oramsu_hl as number) || 0,
+          shared_rooms: (props.orshare_hl as number) || 0,
+          endoscopy_rooms: (props.orendo_hl as number) || 0,
+          other_surgery_rooms: (props.orother_hl as number) || 0,
           
           // Calculated metrics
-          total_beds: (props.hgenlic || 0) + (props.rehabhlic || 0) + (props.psylic || 0) + (props.nfgenlic || 0),
-          total_surgery_rooms: (props.orheart_hl || 0) + (props.orcsect_hl || 0) + (props.oramsu_hl || 0) + 
-                              (props.orshare_hl || 0) + (props.orendo_hl || 0) + (props.orother_hl || 0),
+          total_beds: ((props.hgenlic as number) || 0) + ((props.rehabhlic as number) || 0) + ((props.psylic as number) || 0) + ((props.nfgenlic as number) || 0),
+          total_surgery_rooms: ((props.orheart_hl as number) || 0) + ((props.orcsect_hl as number) || 0) + ((props.oramsu_hl as number) || 0) + 
+                              ((props.orshare_hl as number) || 0) + ((props.orendo_hl as number) || 0) + ((props.orother_hl as number) || 0),
           
           // Facility classification
-          is_major_hospital: (props.hgenlic || 0) >= 100,
-          is_specialty: props.hltype === 'S',
-          is_emergency_dept: props.hltype === 'ED',
-          is_ltac: props.hltype === 'LTAC',
-          is_rehab: props.hltype === 'Rehab',
+          is_major_hospital: ((props.hgenlic as number) || 0) >= 100,
+          is_specialty: (props.hltype as string) === 'S',
+          is_emergency_dept: (props.hltype as string) === 'ED',
+          is_ltac: (props.hltype as string) === 'LTAC',
+          is_rehab: (props.hltype as string) === 'Rehab',
           
           last_updated: new Date().toISOString()
         };
@@ -140,7 +184,7 @@ export async function GET(request: NextRequest) {
 }
 
 // Convert data to CSV format
-function convertToCSV(data: any[]): string {
+function convertToCSV(data: HospitalData[]): string {
   if (!data || data.length === 0) {
     return 'No data available';
   }

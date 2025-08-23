@@ -15,43 +15,26 @@ import { County } from './types/healthcare';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'home' | 'index' | 'data' | 'project'>('index');
-  const [medicaidEnabled, setMedicaidEnabled] = useState<boolean>(true);
-  const [forceLocalData, setForceLocalData] = useState<boolean>(false);
-  const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number } | null>(null);
   const [selectedHospital, setSelectedHospital] = useState<any>(null);
   
   const {
     selectedCounty,
-    hoveredCounty,
     setSelectedCounty
   } = useHealthcareStore();
-
-  // Handle mouse events for positioning
-  const handleMouseMove = (e: MouseEvent) => {
-    setHoverPosition({ x: e.clientX, y: e.clientY });
-  };
   
-  const handleMapClick = () => {
-    setHoverPosition(null); // Clear hover position when clicking empty area
-  };
 
   // Use original optimized healthcare data hook that was working
   const { 
     healthcareData, 
-    counties, 
+    counties,
     loading, 
     error,
-    lastUpdated,
-    isBackendConnected,
-    getCountyDetails,
-    refresh 
+    isBackendConnected
   } = useOptimizedHealthcareData();
   
   // Real hospital data from NC Division of Health Service Regulation
   const { 
-    hospitals, 
-    loading: hospitalsLoading,
-    getHospitalStats
+    hospitals
   } = useHospitalData();
 
   // Layer management
@@ -69,9 +52,6 @@ export default function Home() {
     }
   };
 
-  const handleMedicaidToggle = (enabled: boolean) => {
-    setMedicaidEnabled(enabled);
-  };
 
   const handleCountyClick = (county: County | null) => {
     if (county) {
@@ -166,7 +146,7 @@ export default function Home() {
                 <div className="prose max-w-none">
                   <p className="text-lg text-gray-700 mb-4">
                     North Carolina Healthcare Data Viewer - an interactive mapping tool displaying real healthcare 
-                    data across North Carolina's 100 counties.
+                    data across North Carolina&apos;s 100 counties.
                   </p>
                   <p className="text-gray-600 mb-6">
                     Currently showing verified data from state and federal sources including Medicaid enrollment 
@@ -258,7 +238,7 @@ export default function Home() {
                 <div className="prose max-w-none">
                   <p className="text-lg text-gray-700 mb-4">
                     This interactive mapping application displays verified healthcare data across 
-                    North Carolina's 100 counties from state and federal sources.
+                    North Carolina&apos;s 100 counties from state and federal sources.
                   </p>
                   
                   <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">Current Data Sources</h2>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getHealthcareData } from '../../utils/database';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { HealthcareMetrics } from '../../types/healthcare';
 
 // GET endpoint to serve processed healthcare data
 export async function GET(request: NextRequest) {
@@ -37,22 +38,22 @@ export async function GET(request: NextRequest) {
         // Filter by counties if specified
         if (counties) {
           const countyList = counties.split(',').map(c => c.trim());
-          data = data.filter((item: any) => countyList.includes(item.fips_code));
+          data = (data as HealthcareMetrics[]).filter((item: HealthcareMetrics) => countyList.includes(item.fips_code));
         }
         
         // Return aggregated data for map display (performance optimization)
         if (aggregated) {
-          data = data.map((item: any) => ({
+          data = (data as HealthcareMetrics[]).map((item: HealthcareMetrics) => ({
             fips_code: item.fips_code,
-            county_name: item.countyName || item.county_name,
+            county_name: item.countyName || item.countyName,
             hcvi_composite: item.hcvi_composite,
             vulnerability_category: item.vulnerability_category,
             vulnerability_color: getVulnerabilityColor(item.vulnerability_category),
             medicaid_enrollment_rate: item.medicaid_enrollment_rate,
-            is_rural: (item.total_population || item.population_2020) < 50000
+            is_rural: (item.population_2020 || 0) < 50000
           }));
         }
-      } catch (fileError) {
+      } catch {
         console.log('No processed data found, no fallback available');
         // No fallback data available
         return NextResponse.json({
@@ -118,7 +119,7 @@ function getVulnerabilityColor(category: string): string {
 }
 
 // Convert data to CSV format
-function convertToCSV(data: any[]): string {
+function convertToCSV(data: HealthcareMetrics[]): string {
   if (!data || data.length === 0) {
     return 'No data available';
   }

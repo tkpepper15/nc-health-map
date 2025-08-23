@@ -3,14 +3,6 @@
 import React from 'react';
 import { DataLayer } from '../DataLayers/DataLayerSelector';
 
-interface LayerOption {
-  id: string;
-  label: string;
-  description: string;
-  dataLayer: DataLayer;
-  icon: string;
-}
-
 interface FloatingMetricsTileProps {
   currentLayer: DataLayer;
   onLayerChange: (layer: DataLayer) => void;

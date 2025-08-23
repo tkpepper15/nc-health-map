@@ -8,7 +8,7 @@ export default function IndexCard() {
       </h3>
       
       <p className="text-xs text-gray-600 mb-3">
-        Explore Medicaid enrollment and social vulnerability across NC's 100 counties using real data sources.
+        Explore Medicaid enrollment and social vulnerability across NC&apos;s 100 counties using real data sources.
       </p>
       
       <div className="space-y-2">
