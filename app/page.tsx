@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
+
+// Force dynamic rendering to avoid build-time issues
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 import Header from './components/Layout/Header';
 import MainContent from './components/Layout/MainContent';
 import NCLeafletMap from './components/Map/NCLeafletMap';
@@ -81,35 +85,25 @@ export default function Home() {
     // This can be used to clear selections or handle other map interactions
   }, []);
 
-  // Memoize expensive computations
-  const selectedCountyData = useMemo(() => 
-    selectedCounty ? counties.find(c => c.fips === selectedCounty) || null : null, 
-    [selectedCounty, counties]
+  // Simple computed values without useMemo to avoid build issues
+  const selectedCountyData = selectedCounty ? counties.find(c => c.fips === selectedCounty) || null : null;
+  const medicaidEnabled = currentLayer === 'medicaid';
+  
+  // Simple data summary calculations
+  const validMedicaidCounties = healthcareData.filter(d => 
+    d.medicaid_enrollment_rate !== null && d.medicaid_enrollment_rate !== undefined
   );
-  
-  const medicaidEnabled = useMemo(() => currentLayer === 'medicaid', [currentLayer]);
-  
-  // Memoize data summary calculations for better performance
-  const dataSummary = useMemo(() => {
-    const validMedicaidCounties = healthcareData.filter(d => 
-      d.medicaid_enrollment_rate !== null && d.medicaid_enrollment_rate !== undefined
-    );
-    const avgMedicaidRate = validMedicaidCounties.length > 0 ? 
+  const dataSummary = {
+    totalCounties: healthcareData.length,
+    avgMedicaidRate: validMedicaidCounties.length > 0 ? 
       (validMedicaidCounties.reduce((sum, d) => sum + (d.medicaid_enrollment_rate || 0), 0) / validMedicaidCounties.length).toFixed(1) + '%'
-      : 'N/A';
-    const ruralCount = healthcareData.filter(d => d.is_rural).length;
-    const sviDataCount = healthcareData.filter(d => 
+      : 'N/A',
+    ruralCount: healthcareData.filter(d => d.is_rural).length,
+    medicaidDataCount: validMedicaidCounties.length,
+    sviDataCount: healthcareData.filter(d => 
       d.svi_data?.svi_overall_percentile !== null && d.svi_data?.svi_overall_percentile !== undefined
-    ).length;
-    
-    return {
-      totalCounties: healthcareData.length,
-      avgMedicaidRate,
-      ruralCount,
-      medicaidDataCount: validMedicaidCounties.length,
-      sviDataCount
-    };
-  }, [healthcareData]);
+    ).length
+  };
 
   // Show loading state with debug info
   if (loading) {

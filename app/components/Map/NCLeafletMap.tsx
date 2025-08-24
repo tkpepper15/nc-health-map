@@ -537,7 +537,8 @@ export default function NCLeafletMap({
     if (countyGeoData && L && !mapRef.current) {
       initializeMap();
     }
-  }, [countyGeoData, initializeMap]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countyGeoData]);
 
   // Zoom controls
   const handleZoomIn = () => {

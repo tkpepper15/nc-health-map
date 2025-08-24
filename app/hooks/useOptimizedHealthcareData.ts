@@ -11,14 +11,14 @@ function transformBackendData(backendItem: Record<string, unknown>): HealthcareM
   
   // Only calculate Medicaid totals if we have BOTH population and rate
   let medicaidTotalEnrollment = null;
-  if (totalPopulation && medicaidRate) {
+  if (typeof totalPopulation === 'number' && typeof medicaidRate === 'number') {
     medicaidTotalEnrollment = Math.round(totalPopulation * (medicaidRate / 100));
   }
   
   return {
-    countyId: backendItem.fips_code,
-    countyName: backendItem.county_name || backendItem.countyName,
-    fips_code: backendItem.fips_code,
+    countyId: backendItem.fips_code as string,
+    countyName: (backendItem.county_name || backendItem.countyName) as string,
+    fips_code: backendItem.fips_code as string,
     
     // Real Medicaid data from database - no dummy values
     medicaid_enrollment_rate: backendItem.medicaid_enrollment_rate || null,
