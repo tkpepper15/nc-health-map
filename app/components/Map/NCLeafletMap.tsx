@@ -114,7 +114,7 @@ export default function NCLeafletMap({
     return map;
   }, [counties]);
 
-  // Initialize Leaflet
+  // Initialize Leaflet - only run once on mount
   useEffect(() => {
     const initLeaflet = async () => {
       try {
@@ -123,7 +123,7 @@ export default function NCLeafletMap({
         L = leaflet.default;
 
         // Create custom hospital icons
-        if (L.divIcon) {
+        if (L?.divIcon) {
           // Small hospital icon (< 50 beds)
           (window as unknown as Record<string, unknown>).smallHospitalIcon = L.divIcon({
             className: 'hospital-marker hospital-small',
@@ -223,7 +223,8 @@ export default function NCLeafletMap({
   // Get style for each county based on selected data layer - optimized with Map lookup
   const getCountyStyle = useCallback((feature: GeoJSON.Feature) => {
     // Convert county FIPS to full NC FIPS code for matching
-    const countyFips = feature.properties.FIPS || feature.properties.fips;
+    const properties = feature.properties || {};
+    const countyFips = properties.FIPS || properties.fips;
     const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
     
     // Use Map lookup for O(1) performance instead of array.find O(n)
@@ -279,7 +280,8 @@ export default function NCLeafletMap({
 
     // Throttle hover state updates to every 50ms
     hoverTimeoutRef.current = setTimeout(() => {
-      const countyFips = feature.properties.FIPS || feature.properties.fips;
+      const properties = feature.properties || {};
+      const countyFips = properties.FIPS || properties.fips;
       const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
       
       if (fullFips) {
@@ -315,7 +317,8 @@ export default function NCLeafletMap({
   // Handle county click - optimized with Map lookup
   const handleCountyClick = useCallback((e: import('leaflet').LeafletMouseEvent, feature: GeoJSON.Feature) => {
     // Convert county FIPS to full NC FIPS code for matching
-    const countyFips = feature.properties.FIPS || feature.properties.fips;
+    const properties = feature.properties || {};
+    const countyFips = properties.FIPS || properties.fips;
     const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
     const county = countyMap.get(fullFips);
     
@@ -342,8 +345,8 @@ export default function NCLeafletMap({
     }
 
     // Create GeoJSON layer
-    geoJsonLayerRef.current = L.geoJSON(countyGeoData, {
-      style: (feature: GeoJSON.Feature) => getCountyStyle(feature),
+    geoJsonLayerRef.current = L!.geoJSON(countyGeoData, {
+      style: (feature) => feature ? getCountyStyle(feature) : {},
       onEachFeature: (feature: GeoJSON.Feature, layer: import('leaflet').Layer) => {
         // Only add hover and click handlers if not on hospital layer
         if (currentLayer !== 'hospitals') {
@@ -388,7 +391,7 @@ export default function NCLeafletMap({
     }
 
     // Create a layer group for hospital markers
-    const hospitalMarkersLayer = L.layerGroup();
+    const hospitalMarkersLayer = L!.layerGroup();
 
     hospitals.forEach((hospital: Hospital) => {
       if (hospital.latitude && hospital.longitude) {
@@ -403,7 +406,7 @@ export default function NCLeafletMap({
         }
 
         // Create marker
-        const marker = L.marker([hospital.latitude, hospital.longitude], { icon });
+        const marker = L!.marker([hospital.latitude, hospital.longitude], { icon });
         
         // Add click handler for hospital selection
         marker.on('click', (e: import('leaflet').LeafletMouseEvent) => {
@@ -433,7 +436,7 @@ export default function NCLeafletMap({
 
     try {
       // Create map with NC-focused settings
-      mapRef.current = L.map(mapContainer.current, {
+      mapRef.current = L!.map(mapContainer.current, {
         center: [35.7596, -79.0193], // North Carolina center
         zoom: 7,
         minZoom: 6,
@@ -449,7 +452,7 @@ export default function NCLeafletMap({
       });
 
       // Add OpenStreetMap tiles with reduced opacity
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      L!.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
         maxZoom: 12,
         opacity: 0.4, // Reduce opacity for subtle background
@@ -460,7 +463,7 @@ export default function NCLeafletMap({
       }).addTo(mapRef.current);
       
       // Add seamless background overlay that covers entire visible area
-      const backgroundOverlay = L.rectangle([
+      const backgroundOverlay = L!.rectangle([
         [20.0, -100.0], // Much wider bounds to ensure full coverage
         [50.0, -60.0]   
       ], {
@@ -527,14 +530,14 @@ export default function NCLeafletMap({
       });
     }
     return () => { isActive = false; };
-  }, [currentLayer]);
+  }, [currentLayer, hospitals.length, hospitalsLoading, addHospitalMarkers]);
 
   // Initialize map when county data is loaded - prevent re-initialization
   useEffect(() => {
     if (countyGeoData && L && !mapRef.current) {
       initializeMap();
     }
-  }, [countyGeoData]); // Removed initializeMap from deps to prevent infinite loops
+  }, [countyGeoData, initializeMap]);
 
   // Zoom controls
   const handleZoomIn = () => {

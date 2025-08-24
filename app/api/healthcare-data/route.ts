@@ -131,7 +131,7 @@ function getVulnerabilityColor(category: string): string {
 }
 
 // Convert data to CSV format
-function convertToCSV(data: HealthcareMetrics[]): string {
+function convertToCSV(data: HealthcareMetrics[] | Record<string, unknown>[]): string {
   if (!data || data.length === 0) {
     return 'No data available';
   }

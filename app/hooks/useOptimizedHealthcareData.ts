@@ -172,7 +172,7 @@ export function useOptimizedHealthcareData() {
     } finally {
       setData(prev => ({ ...prev, updateInProgress: false }));
     }
-  }, []);
+  }, [fetchProcessedData]);
 
   // Fetch processed data from backend
   const fetchProcessedData = useCallback(async () => {

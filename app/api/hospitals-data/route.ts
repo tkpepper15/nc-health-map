@@ -44,9 +44,9 @@ export async function GET(request: NextRequest) {
         const geoJson = JSON.parse(fileContent);
         
         // Transform GeoJSON features into flat data structure
-        hospitalsData = geoJson.features.map((feature: Record<string, unknown>, index: number): Record<string, unknown> => {
-        const props = feature.properties;
-        const coords = feature.geometry.coordinates;
+        hospitalsData = geoJson.features.map((feature: GeoJSON.Feature, index: number): Record<string, unknown> => {
+        const props = feature.properties || {};
+        const coords = (feature.geometry as GeoJSON.Point)?.coordinates as [number, number];
         
         return {
           id: (props.objectid as string) || (index + 1).toString(),
