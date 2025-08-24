@@ -5,8 +5,8 @@ import { Suspense } from 'react';
 
 // Client-side page to avoid SSR issues
 
-// Dynamically import a simplified client app to avoid SSR issues
-const SimpleClientApp = dynamic(() => import('./SimpleClientApp'), {
+// Dynamically import the full client app
+const ClientApp = dynamic(() => import('./ClientApp'), {
   ssr: false,
   loading: () => (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -28,7 +28,7 @@ function Home() {
         </div>
       </div>
     }>
-      <SimpleClientApp />
+      <ClientApp />
     </Suspense>
   );
 }
