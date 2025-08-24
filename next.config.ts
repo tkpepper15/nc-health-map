@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Minimal configuration to avoid Webpack hashing issues
+// Configuration to fix webpack hashing issues
 const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
@@ -8,13 +8,36 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Remove any experimental features that might cause issues
+  // Remove experimental features
   experimental: {},
-  // Ensure clean webpack setup
-  webpack: (config) => {
-    // Don't modify webpack config to avoid hashing issues
+  // Fix webpack hashing and chunk issues
+  webpack: (config, { dev, isServer }) => {
+    // Fix for undefined length errors in webpack hashing
+    if (!dev && !isServer) {
+      // Ensure stable chunk IDs
+      config.optimization = {
+        ...config.optimization,
+        moduleIds: 'deterministic',
+        chunkIds: 'deterministic',
+      };
+    }
+
+    // Ensure resolve fallbacks for client-side builds
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        crypto: false,
+      };
+    }
+
     return config;
   },
+  // Disable source maps to prevent hashing issues
+  productionBrowserSourceMaps: false,
+  // Disable static optimization for problematic components
+  staticPageGenerationTimeout: 1000,
 };
 
 export default nextConfig;
