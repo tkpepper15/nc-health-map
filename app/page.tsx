@@ -1,12 +1,12 @@
+'use client';
+
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 
-// Export configuration must be at the top level
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+// Client-side page to avoid SSR issues
 
-// Dynamically import the client app to avoid SSR issues
-const ClientApp = dynamic(() => import('./ClientApp'), {
+// Dynamically import a simplified client app to avoid SSR issues
+const SimpleClientApp = dynamic(() => import('./SimpleClientApp'), {
   ssr: false,
   loading: () => (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -28,7 +28,7 @@ function Home() {
         </div>
       </div>
     }>
-      <ClientApp />
+      <SimpleClientApp />
     </Suspense>
   );
 }
