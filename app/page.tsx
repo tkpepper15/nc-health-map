@@ -2,8 +2,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 
-// Force dynamic rendering to avoid build-time issues
-export const runtime = 'nodejs';
+// Prevent static optimization that causes build issues
 export const dynamic = 'force-dynamic';
 import Header from './components/Layout/Header';
 import MainContent from './components/Layout/MainContent';
