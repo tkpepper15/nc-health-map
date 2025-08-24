@@ -143,37 +143,6 @@ export function useOptimizedHealthcareData() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Function to trigger manual data update
-  const triggerUpdate = useCallback(async () => {
-    setData(prev => ({ ...prev, updateInProgress: true }));
-    setError(null);
-
-    try {
-      // Call backend API to process latest CSV data
-      const response = await fetch('/api/process-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to process data: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      
-      // Fetch updated data
-      await fetchProcessedData();
-      
-      console.log('Data update completed:', result);
-      
-    } catch (err) {
-      console.error('Update failed:', err);
-      setError(err instanceof Error ? err.message : 'Update failed');
-    } finally {
-      setData(prev => ({ ...prev, updateInProgress: false }));
-    }
-  }, [fetchProcessedData]);
-
   // Fetch processed data from backend
   const fetchProcessedData = useCallback(async () => {
     try {
@@ -256,6 +225,37 @@ export function useOptimizedHealthcareData() {
       setLoading(false);
     }
   }, []);
+
+  // Function to trigger manual data update
+  const triggerUpdate = useCallback(async () => {
+    setData(prev => ({ ...prev, updateInProgress: true }));
+    setError(null);
+
+    try {
+      // Call backend API to process latest CSV data
+      const response = await fetch('/api/process-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to process data: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      // Fetch updated data
+      await fetchProcessedData();
+      
+      console.log('Data update completed:', result);
+      
+    } catch (err) {
+      console.error('Update failed:', err);
+      setError(err instanceof Error ? err.message : 'Update failed');
+    } finally {
+      setData(prev => ({ ...prev, updateInProgress: false }));
+    }
+  }, [fetchProcessedData]);
 
   // Initial data fetch only
   useEffect(() => {
