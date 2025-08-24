@@ -15,7 +15,6 @@ interface FallbackMapProps {
 }
 
 export default function FallbackMap({ 
-  counties, 
   healthcareData, 
   selectedMetric, 
   onCountyClick, 

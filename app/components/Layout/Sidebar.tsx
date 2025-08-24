@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import CountyDetailPanel from '../County/CountyDetailPanel';
 import CountyHoverPanel from '../County/CountyHoverPanel';
 import DataUpdatePanelFixed from './DataUpdatePanelFixed';
@@ -28,14 +27,19 @@ interface SidebarProps {
   onCountyDeselect?: () => void;
   currentLayer?: DataLayer;
   onLayerChange?: (layer: DataLayer) => void;
-  layerStats?: any;
+  layerStats?: {
+    totalCount?: number;
+    majorFacilities?: number;
+    emergencyDepts?: number;
+    totalBeds?: number;
+    averageBedsPerHospital?: number;
+  };
   hospitalsLoading?: boolean;
   dataSource?: DataSource;
 }
 
 export default function Sidebar({ 
-  medicaidEnabled, 
-  onMedicaidToggle, 
+ 
   isOpen, 
   onToggle, 
   selectedCounty,

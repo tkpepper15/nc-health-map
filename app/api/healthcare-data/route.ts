@@ -4,7 +4,19 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { HealthcareMetrics } from '../../types/healthcare';
 
-// GET endpoint to serve processed healthcare data
+/**
+ * Healthcare Data API Route
+ * GET /api/healthcare-data
+ * 
+ * Query Parameters:
+ * - format: 'json' | 'csv' (default: 'json')
+ * - county: County name filter
+ * - fips: FIPS code filter  
+ * - rural: 'true' | 'false' - Filter by rural classification
+ * - vulnerability: 'low' | 'moderate' | 'high' | 'extreme' - Filter by vulnerability category
+ * - limit: Number of results to return
+ * - aggregated: 'true' - Return simplified data for performance
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -129,7 +141,7 @@ function convertToCSV(data: HealthcareMetrics[]): string {
   
   for (const row of data) {
     const values = headers.map(header => {
-      const value = (row as unknown as Record<string, unknown>)[header];
+      const value = (row as Record<string, unknown>)[header];
       // Escape commas and quotes in CSV
       if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
         return `"${value.replace(/"/g, '""')}"`;

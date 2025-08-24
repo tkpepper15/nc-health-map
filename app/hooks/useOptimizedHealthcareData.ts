@@ -1,24 +1,18 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { HealthcareMetrics, County } from '../types/healthcare';
 
 // Transform backend data to match frontend interface - REAL DATA ONLY, NO DUMMY VALUES
-function transformBackendData(backendItem: any): HealthcareMetrics {
+function transformBackendData(backendItem: Record<string, unknown>): HealthcareMetrics {
   // Only use real population data, no defaults
   const totalPopulation = backendItem.total_population || backendItem.population_2020;
   const medicaidRate = backendItem.medicaid_enrollment_rate;
   
   // Only calculate Medicaid totals if we have BOTH population and rate
   let medicaidTotalEnrollment = null;
-  let medicaidExpansionEnrollment = null;
-  let medicaidTraditionalEnrollment = null;
-  
   if (totalPopulation && medicaidRate) {
     medicaidTotalEnrollment = Math.round(totalPopulation * (medicaidRate / 100));
-    // Only estimate splits if we have total - otherwise show N/A
-    medicaidExpansionEnrollment = null; // We don't have real expansion/traditional split data
-    medicaidTraditionalEnrollment = null;
   }
   
   return {
@@ -131,14 +125,6 @@ function getVulnerabilityColor(category: string): string {
   return colors[category as keyof typeof colors] || '#6b7280';
 }
 
-// Helper function to get color based on Medicaid enrollment rate
-function getMedicaidEnrollmentColor(rate: number): string {
-  if (rate >= 50) return '#1e40af';      // Very High - Deep Blue
-  if (rate >= 30) return '#3b82f6';      // High - Blue  
-  if (rate >= 15) return '#60a5fa';      // Moderate - Light Blue
-  if (rate >= 5) return '#93c5fd';       // Low - Very Light Blue
-  return '#dbeafe';                      // Very Low - Pale Blue
-}
 
 interface ProcessedData {
   healthcareData: HealthcareMetrics[];
@@ -210,20 +196,20 @@ export function useOptimizedHealthcareData() {
             });
 
             // Transform backend data to match frontend interface
-            const healthcareData = backendData.map((item: any) => transformBackendData(item));
+            const healthcareData = backendData.map((item: Record<string, unknown>) => transformBackendData(item));
 
           // Load county boundaries from GeoJSON 
           const geoResponse = await fetch('/data/nc-counties.json');
           const ncCountiesGeoJSON = await geoResponse.json();
           
-          const countiesData: County[] = ncCountiesGeoJSON.features.map((feature: any) => {
+          const countiesData: County[] = ncCountiesGeoJSON.features.map((feature: GeoJSON.Feature) => {
             const countyFips = feature.properties?.FIPS || feature.properties?.fips || '';
             const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
             return {
               id: fullFips,
               name: feature.properties?.NAME || feature.properties?.name || feature.properties?.CountyName || '',
               fips: fullFips,
-              geometry: feature.geometry as any,
+              geometry: feature.geometry,
               properties: {
                 name: feature.properties?.NAME || feature.properties?.name || '',
                 population: feature.properties?.population || 0,
@@ -256,7 +242,7 @@ export function useOptimizedHealthcareData() {
       console.log('❌ No fallback data available after Supabase failure');
       setError('Unable to connect to database and no local data available');
       
-      setData(prev => ({
+      setData(() => ({
         healthcareData: [],
         counties: [],
         lastUpdated: null,
@@ -287,8 +273,8 @@ export function useOptimizedHealthcareData() {
   //   return () => clearInterval(interval);
   // }, [data.updateInProgress, data.lastUpdated]);
 
-  // Function to get aggregated summary for map display
-  const getMapData = useCallback(() => {
+  // Function to get aggregated summary for map display - memoized
+  const getMapData = useMemo(() => {
     return data.healthcareData.map(county => ({
       fips: county.fips_code,
       name: county.countyName,
@@ -298,16 +284,33 @@ export function useOptimizedHealthcareData() {
     }));
   }, [data.healthcareData]);
 
-  // Function to get detailed data for a specific county
+  // Create lookup maps for O(1) performance
+  const healthcareDataMap = useMemo(() => {
+    const map = new Map<string, HealthcareMetrics>();
+    data.healthcareData.forEach(item => {
+      map.set(item.fips_code, item);
+    });
+    return map;
+  }, [data.healthcareData]);
+
+  const countiesMap = useMemo(() => {
+    const map = new Map<string, County>();
+    data.counties.forEach(county => {
+      map.set(county.fips, county);
+    });
+    return map;
+  }, [data.counties]);
+
+  // Function to get detailed data for a specific county - optimized with Map lookup
   const getCountyDetails = useCallback((fips: string) => {
-    const healthData = data.healthcareData.find(d => d.fips_code === fips);
-    const countyData = data.counties.find(c => c.fips === fips);
+    const healthData = healthcareDataMap.get(fips);
+    const countyData = countiesMap.get(fips);
     
     return healthData && countyData ? {
       ...healthData,
       ...countyData
     } : null;
-  }, [data.healthcareData, data.counties]);
+  }, [healthcareDataMap, countiesMap]);
 
   return {
     ...data,
@@ -315,8 +318,10 @@ export function useOptimizedHealthcareData() {
     error,
     triggerUpdate,
     refresh: fetchProcessedData,
-    getMapData,
+    mapData: getMapData,
     getCountyDetails,
+    healthcareDataMap,
+    countiesMap,
     isBackendConnected: data.lastUpdated !== null
   };
 }

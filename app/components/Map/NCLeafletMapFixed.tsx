@@ -10,10 +10,10 @@ import { DataLayer } from '../DataLayers/DataLayerSelector';
 import styles from './NCMap.module.css';
 
 // Dynamic import for Leaflet to avoid SSR issues
-let L: any = null;
+let L: typeof import('leaflet') | null = null;
 
 // Helper function to format values consistently
-function formatValue(value: any, type: 'number' | 'percent' | 'decimal' = 'number'): string {
+function formatValue(value: unknown, type: 'number' | 'percent' | 'decimal' = 'number'): string {
   if (value === null || value === undefined || value === '') {
     return '<span class="text-gray-400">No Data</span>';
   }
@@ -37,7 +37,16 @@ function formatValue(value: any, type: 'number' | 'percent' | 'decimal' = 'numbe
 interface NCLeafletMapProps {
   counties: County[];
   healthcareData: HealthcareMetrics[];
-  hospitals?: any[];
+  hospitals?: Array<{
+    id: string | number;
+    facility_name: string;
+    latitude: number;
+    longitude: number;
+    total_beds?: number;
+    is_major_hospital?: boolean;
+    is_emergency_dept?: boolean;
+    facility_type?: string;
+  }>;
   currentLayer?: DataLayer;
   medicaidEnabled: boolean;
   onCountyClick: (county: County | null) => void;
@@ -55,8 +64,8 @@ export default function NCLeafletMapFixed({
 }: NCLeafletMapProps) {
   
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<any>(null);
-  const geoJsonLayerRef = useRef<any>(null);
+  const mapRef = useRef<import('leaflet').Map | null>(null);
+  const geoJsonLayerRef = useRef<import('leaflet').GeoJSON | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
 
@@ -86,7 +95,7 @@ export default function NCLeafletMapFixed({
   }, [counties]);
 
   // Memoized style calculation
-  const getCountyStyle = useCallback((feature: any) => {
+  const getCountyStyle = useCallback((feature: GeoJSON.Feature) => {
     const fips = feature.properties.fips || feature.properties.FIPS;
     const healthData = healthcareDataMap.get(fips);
     
@@ -176,13 +185,13 @@ export default function NCLeafletMapFixed({
 
         // Fix for default markers (not needed for this map, but good practice)
         try {
-          delete (L.Icon.Default.prototype as any)._getIconUrl;
+          delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
           L.Icon.Default.mergeOptions({
             iconRetinaUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAApCAYAAADAk4LOAAAFgUlEQVR4Aa1XA5BjWRTN2oW17d3YaZtr2962HUzbXNfN1+3951TXXVBBENfrLFriEwAYQAoAX3O/AACAG3xGAAAoACfwAAAoAAHrAQAAOAAAUAAAOwACABZmAwDAOgACdAA80ADhIAB0AUC8ADAA3NWKAACAPQC8Hd7I',
             iconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAApCAYAAADAk4LOAAAFgUlEQVR4Aa1XA5BjWRTN2oW17d3YaZtr2962HUzbXNfN1+3951TXXVBBENfrLFriEwAYQAoAX3O/AACAG3xGAAAoACfwAAAoAAHrAQAAOAAAUAAAOwACABZmAwDAOgACdAA80ADhIAB0AUC8ADAA3NWKAACAPQC8Hd7I',
             shadowUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACkAAAApCAQAAAACach9AAACMUlEQVR4Ae3ShY7jQBCF4deScrEqpKihjGxjG2O7yPYytrExsrGxsbGxsrGxsY2NjWzMObeFH6jXX5'
           });
-        } catch (e) {
+        } catch {
           // Ignore marker icon errors since we don't use markers
         }
 
@@ -230,7 +239,7 @@ export default function NCLeafletMapFixed({
           // Create county layer
           geoJsonLayerRef.current = L.geoJSON(ncCountiesGeoJSON, {
             style: getCountyStyle,
-            onEachFeature: (feature: any, layer: any) => {
+            onEachFeature: (feature: GeoJSON.Feature, layer: import('leaflet').Layer) => {
               const fips = feature.properties.fips || feature.properties.FIPS;
               const countyName = feature.properties.NAME || feature.properties.name;
               const healthData = healthcareDataMap.get(fips);
@@ -245,7 +254,7 @@ export default function NCLeafletMapFixed({
               }. Click to view details.`;
               
               layer.on({
-                mouseover: (e: any) => {
+                mouseover: (e: import('leaflet').LeafletMouseEvent) => {
                   setHoveredCounty(fips);
                   setHoverPosition({ x: e.originalEvent.clientX, y: e.originalEvent.clientY });
                 },
@@ -257,7 +266,7 @@ export default function NCLeafletMapFixed({
                   const county = countyMap.get(fips);
                   onCountyClick(county || null);
                 },
-                keydown: (e: any) => {
+                keydown: (e: import('leaflet').LeafletEvent) => {
                   if (e.originalEvent.key === 'Enter' || e.originalEvent.key === ' ') {
                     e.originalEvent.preventDefault();
                     const county = countyMap.get(fips);
@@ -366,7 +375,7 @@ export default function NCLeafletMapFixed({
           });
 
           // Add prominent North Carolina state boundary
-          const stateOutline = L.geoJSON(ncCountiesGeoJSON, {
+          L.geoJSON(ncCountiesGeoJSON, {
             style: {
               fillColor: 'transparent',
               color: '#1f2937', // Dark border to define NC
@@ -412,7 +421,7 @@ export default function NCLeafletMapFixed({
   useEffect(() => {
     if (geoJsonLayerRef.current && mapLoaded) {
       // Just update styles without recreating the entire layer
-      geoJsonLayerRef.current.eachLayer((layer: any) => {
+      geoJsonLayerRef.current.eachLayer((layer: import('leaflet').Layer & { feature: GeoJSON.Feature; setStyle: (style: object) => void }) => {
         const feature = layer.feature;
         layer.setStyle(getCountyStyle(feature));
       });
@@ -425,7 +434,7 @@ export default function NCLeafletMapFixed({
       mountedRef.current = false;
       if (mapRef.current) {
         // Clean up all layers and event listeners
-        mapRef.current.eachLayer((layer: any) => {
+        mapRef.current.eachLayer((layer: import('leaflet').Layer & { off?: () => void }) => {
           if (layer.off) {
             layer.off();
           }

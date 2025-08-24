@@ -171,6 +171,13 @@ async function processSVIData(filePath: string) {
     const racialMinority = parseFloat(values[headers.indexOf('RPL_THEME3')] || values[headers.indexOf('minority')] || '0.5');
     const housingTransport = parseFloat(values[headers.indexOf('RPL_THEME4')] || values[headers.indexOf('housing')] || '0.5');
     
+    // Extract additional variables for complete SVIData interface
+    const poverty150Pct = parseFloat(values[headers.indexOf('EP_POV150')] || values[headers.indexOf('poverty_150_pct')] || '0');
+    const unemploymentPct = parseFloat(values[headers.indexOf('EP_UNEMP')] || values[headers.indexOf('unemployment_pct')] || '0');
+    const housingBurdenPct = parseFloat(values[headers.indexOf('EP_HBURD')] || values[headers.indexOf('housing_burden_pct')] || '0');
+    const noHighschoolPct = parseFloat(values[headers.indexOf('EP_NOHSDP')] || values[headers.indexOf('no_highschool_pct')] || '0');
+    const noInsurancePct = parseFloat(values[headers.indexOf('EP_UNINSUR')] || values[headers.indexOf('no_insurance_pct')] || '0');
+    
     sviData.push({
       fips_code: fips,
       county_name: county.replace(/"/g, '').trim(),
@@ -178,7 +185,12 @@ async function processSVIData(filePath: string) {
       socioeconomic_percentile: socioeconomic,
       household_composition_percentile: householdComposition,
       racial_minority_percentile: racialMinority,
-      housing_transport_percentile: housingTransport
+      housing_transport_percentile: housingTransport,
+      poverty_150_pct: poverty150Pct,
+      unemployment_pct: unemploymentPct,
+      housing_burden_pct: housingBurdenPct,
+      no_highschool_pct: noHighschoolPct,
+      no_insurance_pct: noInsurancePct
     });
   }
   

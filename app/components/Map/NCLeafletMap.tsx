@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { County, HealthcareMetrics } from '../../types/healthcare';
 import { useHealthcareStore } from '../../utils/store';
 import MapLegend from './MapLegend';
@@ -10,7 +10,7 @@ import { DataLayer } from '../DataLayers/DataLayerSelector';
 import styles from './NCMap.module.css';
 
 // Dynamic import for Leaflet to avoid SSR issues
-let L: any = null;
+let L: typeof import('leaflet') | null = null;
 
 interface NCLeafletMapProps {
   counties: County[];
@@ -78,15 +78,16 @@ export default function NCLeafletMap({
   selectedHospital
 }: NCLeafletMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<any>(null);
-  const geoJsonLayerRef = useRef<any>(null);
+  const mapRef = useRef<import('leaflet').Map | null>(null);
+  const geoJsonLayerRef = useRef<import('leaflet').GeoJSON | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
-  const [countyGeoData, setCountyGeoData] = useState<any>(null);
+  const [countyGeoData, setCountyGeoData] = useState<GeoJSON.FeatureCollection | null>(null);
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [hospitalsLoading, setHospitalsLoading] = useState(false);
   const [clickPosition, setClickPosition] = useState<{ x: number; y: number } | null>(null);
   const [hospitalClickPosition, setHospitalClickPosition] = useState<{ x: number; y: number } | null>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { 
     hoveredCounty, 
@@ -94,6 +95,24 @@ export default function NCLeafletMap({
     setHoveredCounty, 
     setHoverPosition 
   } = useHealthcareStore();
+
+  // Memoize healthcare data lookup for better performance - MUST BE FIRST
+  const healthcareDataMap = useMemo(() => {
+    const map = new Map<string, HealthcareMetrics>();
+    healthcareData.forEach(data => {
+      map.set(data.fips_code, data);
+    });
+    return map;
+  }, [healthcareData]);
+
+  // Memoize county data lookup
+  const countyMap = useMemo(() => {
+    const map = new Map<string, County>();
+    counties.forEach(county => {
+      map.set(county.fips, county);
+    });
+    return map;
+  }, [counties]);
 
   // Initialize Leaflet
   useEffect(() => {
@@ -106,7 +125,7 @@ export default function NCLeafletMap({
         // Create custom hospital icons
         if (L.divIcon) {
           // Small hospital icon (< 50 beds)
-          (window as any).smallHospitalIcon = L.divIcon({
+          (window as unknown as Record<string, unknown>).smallHospitalIcon = L.divIcon({
             className: 'hospital-marker hospital-small',
             html: '<div class="hospital-dot">🏥</div>',
             iconSize: [20, 20],
@@ -114,7 +133,7 @@ export default function NCLeafletMap({
           });
           
           // Medium hospital icon (50-99 beds)
-          (window as any).mediumHospitalIcon = L.divIcon({
+          (window as unknown as Record<string, unknown>).mediumHospitalIcon = L.divIcon({
             className: 'hospital-marker hospital-medium',
             html: '<div class="hospital-dot">🏥</div>',
             iconSize: [25, 25],
@@ -122,7 +141,7 @@ export default function NCLeafletMap({
           });
           
           // Large hospital icon (100+ beds)
-          (window as any).largeHospitalIcon = L.divIcon({
+          (window as unknown as Record<string, unknown>).largeHospitalIcon = L.divIcon({
             className: 'hospital-marker hospital-large',
             html: '<div class="hospital-dot">🏥</div>',
             iconSize: [30, 30],
@@ -130,7 +149,7 @@ export default function NCLeafletMap({
           });
           
           // Emergency department icon
-          (window as any).emergencyIcon = L.divIcon({
+          (window as unknown as Record<string, unknown>).emergencyIcon = L.divIcon({
             className: 'hospital-marker hospital-emergency',
             html: '<div class="hospital-dot">🚑</div>',
             iconSize: [22, 22],
@@ -153,9 +172,18 @@ export default function NCLeafletMap({
     initLeaflet();
 
     return () => {
+      // Cleanup hover timeout
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+      // Cleanup map
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
+      }
+      // Cleanup hospital markers
+      if ((window as unknown as Record<string, unknown>).hospitalMarkersLayer) {
+        (window as unknown as Record<string, unknown>).hospitalMarkersLayer = null;
       }
     };
   }, []);
@@ -192,8 +220,215 @@ export default function NCLeafletMap({
     }
   };
 
+  // Get style for each county based on selected data layer - optimized with Map lookup
+  const getCountyStyle = useCallback((feature: GeoJSON.Feature) => {
+    // Convert county FIPS to full NC FIPS code for matching
+    const countyFips = feature.properties.FIPS || feature.properties.fips;
+    const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
+    
+    // Use Map lookup for O(1) performance instead of array.find O(n)
+    const healthData = healthcareDataMap.get(fullFips);
+    
+    let fillColor = '#e5e7eb'; // Default gray
+    let fillOpacity = 0.7;
+
+    if (healthData) {
+      switch (currentLayer) {
+        case 'medicaid':
+          fillColor = getMedicaidColor(healthData.medicaid_enrollment_rate);
+          fillOpacity = medicaidEnabled ? 0.9 : 0.7;
+          break;
+        case 'svi':
+          fillColor = getSVIColor(healthData.svi_data?.svi_overall_percentile);
+          fillOpacity = 0.8;
+          break;
+        case 'hospitals':
+          // For hospital layer, use subtle background with very low opacity
+          fillColor = '#f9fafb';
+          fillOpacity = 0.2;
+          break;
+        default:
+          fillColor = getMedicaidColor(healthData.medicaid_enrollment_rate);
+          fillOpacity = 0.8;
+      }
+    }
+
+    return {
+      fillColor: fillColor,
+      weight: currentLayer === 'hospitals' ? 0.5 : 1,
+      opacity: currentLayer === 'hospitals' ? 0.3 : 1,
+      color: currentLayer === 'hospitals' ? '#e5e7eb' : '#ffffff',
+      fillOpacity: fillOpacity
+    };
+  }, [healthcareDataMap, currentLayer, medicaidEnabled]);
+
+  // Handle county hover with throttling to reduce performance impact
+  const handleCountyHover = useCallback((e: import('leaflet').LeafletMouseEvent, feature: GeoJSON.Feature) => {
+    const layer = e.target;
+    layer.setStyle({
+      weight: 3,
+      color: '#000000',
+      fillOpacity: 0.9
+    });
+    layer.bringToFront();
+
+    // Clear existing timeout
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+
+    // Throttle hover state updates to every 50ms
+    hoverTimeoutRef.current = setTimeout(() => {
+      const countyFips = feature.properties.FIPS || feature.properties.fips;
+      const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
+      
+      if (fullFips) {
+        setHoveredCounty(fullFips);
+        // Set hover position based on mouse event
+        const rect = mapContainer.current?.getBoundingClientRect();
+        if (rect && e.originalEvent) {
+          setHoverPosition({
+            x: e.originalEvent.clientX - rect.left,
+            y: e.originalEvent.clientY - rect.top
+          });
+        }
+      }
+    }, 50);
+  }, [setHoveredCounty, setHoverPosition]);
+
+  // Handle mouse out
+  const handleCountyMouseOut = useCallback((e: import('leaflet').LeafletMouseEvent) => {
+    // Clear any pending hover timeout
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    
+    if (geoJsonLayerRef.current) {
+      geoJsonLayerRef.current.resetStyle(e.target);
+    }
+    // Clear hover state
+    setHoveredCounty(null);
+    setHoverPosition(null);
+  }, [setHoveredCounty, setHoverPosition]);
+
+  // Handle county click - optimized with Map lookup
+  const handleCountyClick = useCallback((e: import('leaflet').LeafletMouseEvent, feature: GeoJSON.Feature) => {
+    // Convert county FIPS to full NC FIPS code for matching
+    const countyFips = feature.properties.FIPS || feature.properties.fips;
+    const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
+    const county = countyMap.get(fullFips);
+    
+    if (county) {
+      // Capture click position for fixed tile placement
+      const rect = mapContainer.current?.getBoundingClientRect();
+      if (rect && e.originalEvent) {
+        setClickPosition({
+          x: e.originalEvent.clientX,
+          y: e.originalEvent.clientY
+        });
+      }
+      onCountyClick(county);
+    }
+  }, [countyMap, onCountyClick]);
+
+  // Add county GeoJSON layer
+  const addCountyLayer = useCallback(() => {
+    if (!mapRef.current || !L || !countyGeoData) return;
+
+    // Remove existing layer
+    if (geoJsonLayerRef.current) {
+      mapRef.current.removeLayer(geoJsonLayerRef.current);
+    }
+
+    // Create GeoJSON layer
+    geoJsonLayerRef.current = L.geoJSON(countyGeoData, {
+      style: (feature: GeoJSON.Feature) => getCountyStyle(feature),
+      onEachFeature: (feature: GeoJSON.Feature, layer: import('leaflet').Layer) => {
+        // Only add hover and click handlers if not on hospital layer
+        if (currentLayer !== 'hospitals') {
+          layer.on({
+            mouseover: (e: import('leaflet').LeafletMouseEvent) => handleCountyHover(e, feature),
+            mouseout: (e: import('leaflet').LeafletMouseEvent) => handleCountyMouseOut(e),
+            click: (e: import('leaflet').LeafletMouseEvent) => handleCountyClick(e, feature)
+          });
+        }
+      }
+    }).addTo(mapRef.current);
+
+    // Fit map to NC county bounds with proper padding
+    const bounds = geoJsonLayerRef.current.getBounds();
+    mapRef.current.fitBounds(bounds, {
+      padding: [20, 20],
+      maxZoom: 10 // Prevent zooming too close when fitting bounds
+    });
+    
+    // Set NC-specific bounds after fitting
+    mapRef.current.setMaxBounds([
+      [33.0, -85.0], // Southwest
+      [37.5, -75.0]  // Northeast
+    ]);
+  }, [countyGeoData, getCountyStyle, currentLayer, handleCountyHover, handleCountyMouseOut, handleCountyClick]);
+
+  // Add hospital markers to the map
+  const addHospitalMarkers = useCallback(() => {
+    if (!mapRef.current || !L) {
+      return;
+    }
+
+    // Always clear existing hospital markers first
+    if ((window as unknown as Record<string, unknown>).hospitalMarkersLayer) {
+      mapRef.current.removeLayer((window as unknown as Record<string, unknown>).hospitalMarkersLayer as import('leaflet').Layer);
+      (window as unknown as Record<string, unknown>).hospitalMarkersLayer = null;
+    }
+
+    // Only add markers if we're on the hospital layer and have hospital data
+    if (!hospitals.length || currentLayer !== 'hospitals') {
+      return;
+    }
+
+    // Create a layer group for hospital markers
+    const hospitalMarkersLayer = L.layerGroup();
+
+    hospitals.forEach((hospital: Hospital) => {
+      if (hospital.latitude && hospital.longitude) {
+        // Determine icon based on hospital type and size
+        let icon = (window as unknown as Record<string, unknown>).smallHospitalIcon as import('leaflet').DivIcon;
+        if (hospital.is_emergency_dept) {
+          icon = (window as unknown as Record<string, unknown>).emergencyIcon as import('leaflet').DivIcon;
+        } else if (hospital.is_major_hospital || (hospital.total_beds && hospital.total_beds >= 100)) {
+          icon = (window as unknown as Record<string, unknown>).largeHospitalIcon as import('leaflet').DivIcon;
+        } else if (hospital.total_beds && hospital.total_beds >= 50) {
+          icon = (window as unknown as Record<string, unknown>).mediumHospitalIcon as import('leaflet').DivIcon;
+        }
+
+        // Create marker
+        const marker = L.marker([hospital.latitude, hospital.longitude], { icon });
+        
+        // Add click handler for hospital selection
+        marker.on('click', (e: import('leaflet').LeafletMouseEvent) => {
+          e.originalEvent.stopPropagation(); // Prevent county click
+          if (onHospitalClick) {
+            // Capture hospital click position
+            setHospitalClickPosition({
+              x: e.originalEvent.clientX,
+              y: e.originalEvent.clientY
+            });
+            onHospitalClick(hospital);
+          }
+        });
+
+        hospitalMarkersLayer.addLayer(marker);
+      }
+    });
+
+    // Add to map and store reference
+    hospitalMarkersLayer.addTo(mapRef.current);
+    (window as unknown as Record<string, unknown>).hospitalMarkersLayer = hospitalMarkersLayer;
+  }, [hospitals, currentLayer, onHospitalClick]);
+
   // Initialize the map
-  const initializeMap = () => {
+  const initializeMap = useCallback(() => {
     if (!mapContainer.current || !L || !countyGeoData) return;
 
     try {
@@ -247,86 +482,7 @@ export default function NCLeafletMap({
       console.error('Failed to initialize map:', error);
       setMapError('Failed to initialize map. Please try again.');
     }
-  };
-
-  // Add county GeoJSON layer
-  const addCountyLayer = () => {
-    if (!mapRef.current || !L || !countyGeoData) return;
-
-    // Remove existing layer
-    if (geoJsonLayerRef.current) {
-      mapRef.current.removeLayer(geoJsonLayerRef.current);
-    }
-
-    // Create GeoJSON layer
-    geoJsonLayerRef.current = L.geoJSON(countyGeoData, {
-      style: (feature: any) => getCountyStyle(feature),
-      onEachFeature: (feature: any, layer: any) => {
-        // Only add hover and click handlers if not on hospital layer
-        if (currentLayer !== 'hospitals') {
-          layer.on({
-            mouseover: (e: any) => handleCountyHover(e, feature),
-            mouseout: (e: any) => handleCountyMouseOut(e),
-            click: (e: any) => handleCountyClick(e, feature)
-          });
-        }
-      }
-    }).addTo(mapRef.current);
-
-    // Fit map to NC county bounds with proper padding
-    const bounds = geoJsonLayerRef.current.getBounds();
-    mapRef.current.fitBounds(bounds, {
-      padding: [20, 20],
-      maxZoom: 10 // Prevent zooming too close when fitting bounds
-    });
-    
-    // Set NC-specific bounds after fitting
-    mapRef.current.setMaxBounds([
-      [33.0, -85.0], // Southwest
-      [37.5, -75.0]  // Northeast
-    ]);
-  };
-
-  // Get style for each county based on selected data layer
-  const getCountyStyle = (feature: any) => {
-    // Convert county FIPS to full NC FIPS code for matching
-    const countyFips = feature.properties.FIPS || feature.properties.fips;
-    const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
-    
-    const healthData = healthcareData.find(h => h.fips_code === fullFips);
-    
-    let fillColor = '#e5e7eb'; // Default gray
-    let fillOpacity = 0.7;
-
-    if (healthData) {
-      switch (currentLayer) {
-        case 'medicaid':
-          fillColor = getMedicaidColor(healthData.medicaid_enrollment_rate);
-          fillOpacity = medicaidEnabled ? 0.9 : 0.7;
-          break;
-        case 'svi':
-          fillColor = getSVIColor(healthData.svi_data?.svi_overall_percentile);
-          fillOpacity = 0.8;
-          break;
-        case 'hospitals':
-          // For hospital layer, use subtle background with very low opacity
-          fillColor = '#f9fafb';
-          fillOpacity = 0.2;
-          break;
-        default:
-          fillColor = getMedicaidColor(healthData.medicaid_enrollment_rate);
-          fillOpacity = 0.8;
-      }
-    }
-
-    return {
-      fillColor: fillColor,
-      weight: currentLayer === 'hospitals' ? 0.5 : 1,
-      opacity: currentLayer === 'hospitals' ? 0.3 : 1,
-      color: currentLayer === 'hospitals' ? '#e5e7eb' : '#ffffff',
-      fillOpacity: fillOpacity
-    };
-  };
+  }, [countyGeoData, addCountyLayer, addHospitalMarkers]);
 
   // Color functions for different data layers
 
@@ -351,151 +507,34 @@ export default function NCLeafletMap({
   };
 
 
-  // Add hospital markers to the map
-  const addHospitalMarkers = () => {
-    if (!mapRef.current || !L) {
-      return;
-    }
-
-    // Always clear existing hospital markers first
-    if ((window as any).hospitalMarkersLayer) {
-      mapRef.current.removeLayer((window as any).hospitalMarkersLayer);
-      (window as any).hospitalMarkersLayer = null;
-    }
-
-    // Only add markers if we're on the hospital layer and have hospital data
-    if (!hospitals.length || currentLayer !== 'hospitals') {
-      return;
-    }
-
-    // Create a layer group for hospital markers
-    const hospitalMarkersLayer = L.layerGroup();
-
-    hospitals.forEach((hospital: Hospital) => {
-      if (hospital.latitude && hospital.longitude) {
-        // Determine icon based on hospital type and size
-        let icon = (window as any).smallHospitalIcon;
-        if (hospital.is_emergency_dept) {
-          icon = (window as any).emergencyIcon;
-        } else if (hospital.is_major_hospital || (hospital.total_beds && hospital.total_beds >= 100)) {
-          icon = (window as any).largeHospitalIcon;
-        } else if (hospital.total_beds && hospital.total_beds >= 50) {
-          icon = (window as any).mediumHospitalIcon;
-        }
-
-        // Create marker
-        const marker = L.marker([hospital.latitude, hospital.longitude], { icon });
-        
-        // Add click handler for hospital selection
-        marker.on('click', (e: any) => {
-          e.originalEvent.stopPropagation(); // Prevent county click
-          if (onHospitalClick) {
-            // Capture hospital click position
-            setHospitalClickPosition({
-              x: e.originalEvent.clientX,
-              y: e.originalEvent.clientY
-            });
-            onHospitalClick(hospital);
-          }
-        });
-
-        hospitalMarkersLayer.addLayer(marker);
-      }
-    });
-
-    // Add to map and store reference
-    hospitalMarkersLayer.addTo(mapRef.current);
-    (window as any).hospitalMarkersLayer = hospitalMarkersLayer;
-  };
-
-  // Get color class for HCVI score
-  const getScoreColor = (score?: number) => {
-    if (!score) return 'text-gray-500';
-    if (score >= 8.5) return 'text-red-700';
-    if (score >= 6.5) return 'text-orange-600';
-    if (score >= 4.0) return 'text-yellow-600';
-    return 'text-green-600';
-  };
-
-  // Handle county hover
-  const handleCountyHover = (e: any, feature: any) => {
-    const layer = e.target;
-    layer.setStyle({
-      weight: 3,
-      color: '#000000',
-      fillOpacity: 0.9
-    });
-    layer.bringToFront();
-
-    // Update hover state
-    const countyFips = feature.properties.FIPS || feature.properties.fips;
-    const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
-    const countyName = feature.properties.NAME || feature.properties.name || feature.properties.COUNTY;
-    
-    if (fullFips) {
-      setHoveredCounty(fullFips);
-      // Set hover position based on mouse event
-      const rect = mapContainer.current?.getBoundingClientRect();
-      if (rect && e.originalEvent) {
-        setHoverPosition({
-          x: e.originalEvent.clientX - rect.left,
-          y: e.originalEvent.clientY - rect.top
-        });
-      }
-    }
-  };
-
-  // Handle mouse out
-  const handleCountyMouseOut = (e: any) => {
-    if (geoJsonLayerRef.current) {
-      geoJsonLayerRef.current.resetStyle(e.target);
-    }
-    // Clear hover state
-    setHoveredCounty(null);
-    setHoverPosition(null);
-  };
-
-  // Handle county click
-  const handleCountyClick = (e: any, feature: any) => {
-    // Convert county FIPS to full NC FIPS code for matching
-    const countyFips = feature.properties.FIPS || feature.properties.fips;
-    const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
-    const county = counties.find(c => c.fips === fullFips);
-    
-    if (county) {
-      // Capture click position for fixed tile placement
-      const rect = mapContainer.current?.getBoundingClientRect();
-      if (rect && e.originalEvent) {
-        setClickPosition({
-          x: e.originalEvent.clientX,
-          y: e.originalEvent.clientY
-        });
-      }
-      onCountyClick(county);
-    }
-  };
-
-  // Update map when data or layer changes
+  // Update map when data or layer changes - optimized dependencies
   useEffect(() => {
     if (mapLoaded && countyGeoData) {
       addCountyLayer();
       addHospitalMarkers();
     }
-  }, [medicaidEnabled, healthcareData, mapLoaded, countyGeoData, currentLayer, hospitals]);
+  }, [mapLoaded, countyGeoData, currentLayer, addCountyLayer, addHospitalMarkers]);
 
-  // Load hospital data when needed
+  // Load hospital data when needed - optimized to prevent frequent calls
   useEffect(() => {
+    let isActive = true;
     if (currentLayer === 'hospitals' && hospitals.length === 0 && !hospitalsLoading) {
-      loadHospitalData();
+      loadHospitalData().then(() => {
+        // Only update if component is still mounted
+        if (isActive && mapRef.current) {
+          addHospitalMarkers();
+        }
+      });
     }
-  }, [currentLayer, hospitals.length, hospitalsLoading]);
+    return () => { isActive = false; };
+  }, [currentLayer]);
 
-  // Initialize map when county data is loaded
+  // Initialize map when county data is loaded - prevent re-initialization
   useEffect(() => {
     if (countyGeoData && L && !mapRef.current) {
       initializeMap();
     }
-  }, [countyGeoData]);
+  }, [countyGeoData]); // Removed initializeMap from deps to prevent infinite loops
 
   // Zoom controls
   const handleZoomIn = () => {
@@ -531,11 +570,11 @@ export default function NCLeafletMap({
     );
   }
 
-  // Get hovered county data
-  const hoveredCountyData = hoveredCounty ? healthcareData.find(h => h.fips_code === hoveredCounty) || null : null;
+  // Get hovered county data - optimized with Map lookup
+  const hoveredCountyData = hoveredCounty ? healthcareDataMap.get(hoveredCounty) || null : null;
   
-  // Get selected county data
-  const selectedCountyData = selectedCounty ? healthcareData.find(h => h.fips_code === selectedCounty.fips) || null : null;
+  // Get selected county data - optimized with Map lookup
+  const selectedCountyData = selectedCounty ? healthcareDataMap.get(selectedCounty.fips) || null : null;
 
   return (
     <div className={`w-full h-full relative overflow-hidden bg-slate-100 ${styles.mapContainer}`}>

@@ -3,50 +3,22 @@ import { getHospitalData } from '../../utils/database';
 import { promises as fs } from 'fs';
 import path from 'path';
 
-interface HospitalData {
-  id: string | number;
-  facility_name: string;
-  alt_name: string;
-  licensee: string;
-  license_number: string;
-  facility_type: string;
-  service_type: string;
-  county: string;
-  city: string;
-  state: string;
-  zip: string;
-  address: string;
-  phone: string;
-  latitude: number;
-  longitude: number;
-  general_beds: number;
-  rehab_beds: number;
-  psych_beds: number;
-  substance_abuse_beds: number;
-  nursing_facility_beds: number;
-  cardiac_surgery_rooms: number;
-  cesarean_rooms: number;
-  ambulatory_surgery_rooms: number;
-  shared_rooms: number;
-  endoscopy_rooms: number;
-  other_surgery_rooms: number;
-  total_beds: number;
-  total_surgery_rooms: number;
-  is_major_hospital: boolean;
-  is_specialty: boolean;
-  is_emergency_dept: boolean;
-  is_ltac: boolean;
-  is_rehab: boolean;
-  last_updated: string;
-}
-
-interface GeoJsonFeature {
-  properties: Record<string, unknown>;
-  geometry: {
-    coordinates: [number, number];
-  };
-}
-
+/**
+ * Hospital Data API Route
+ * GET /api/hospitals-data
+ * 
+ * Query Parameters:
+ * - format: 'json' | 'csv' (default: 'json')
+ * - county: County name filter
+ * - city: City name filter
+ * - type: Facility type filter
+ * - emergency: 'true' | 'false' - Filter by emergency department
+ * - major: 'true' | 'false' - Filter by major hospital status
+ * - min_beds: Minimum bed count
+ * - max_beds: Maximum bed count
+ * - limit: Number of results to return
+ * - bounds: Geographic bounds as 'north,south,east,west'
+ */
 // GET endpoint to serve hospital data
 export async function GET(request: NextRequest) {
   try {
@@ -72,7 +44,7 @@ export async function GET(request: NextRequest) {
         const geoJson = JSON.parse(fileContent);
         
         // Transform GeoJSON features into flat data structure
-        hospitalsData = geoJson.features.map((feature: GeoJsonFeature, index: number): HospitalData => {
+        hospitalsData = geoJson.features.map((feature: Record<string, unknown>, index: number): Record<string, unknown> => {
         const props = feature.properties;
         const coords = feature.geometry.coordinates;
         
@@ -184,7 +156,7 @@ export async function GET(request: NextRequest) {
 }
 
 // Convert data to CSV format
-function convertToCSV(data: HospitalData[]): string {
+function convertToCSV(data: Record<string, unknown>[]): string {
   if (!data || data.length === 0) {
     return 'No data available';
   }
@@ -194,7 +166,7 @@ function convertToCSV(data: HospitalData[]): string {
   
   for (const row of data) {
     const values = headers.map(header => {
-      const value = (row as unknown as Record<string, unknown>)[header];
+      const value = row[header];
       // Escape commas and quotes in CSV
       if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
         return `"${value.replace(/"/g, '""')}"`;

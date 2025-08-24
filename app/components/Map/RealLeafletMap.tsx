@@ -17,21 +17,20 @@ interface RealLeafletMapProps {
 }
 
 export default function RealLeafletMap({ 
-  counties, 
   healthcareData, 
   selectedMetric, 
   onCountyClick, 
   selectedCounty 
 }: RealLeafletMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<any>(null);
-  const geoJsonLayerRef = useRef<any>(null);
+  const mapRef = useRef<import('leaflet').Map | null>(null);
+  const geoJsonLayerRef = useRef<import('leaflet').GeoJSON | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
-    let timeoutId: NodeJS.Timeout;
+    const timeoutId: NodeJS.Timeout;
 
     const initMap = async () => {
       try {
@@ -99,7 +98,7 @@ export default function RealLeafletMap({
         mapRef.current = map;
 
         // Style function for counties
-        const style = (feature: any) => {
+        const style = (feature: GeoJSON.Feature) => {
           const countyId = feature.properties.id;
           const data = healthcareData.find(d => d.countyId === countyId);
           let fillColor = '#e5e7eb';
@@ -120,9 +119,9 @@ export default function RealLeafletMap({
         };
 
         // Event handlers
-        const onEachFeature = (feature: any, layer: any) => {
+        const onEachFeature = (feature: GeoJSON.Feature, layer: import('leaflet').Layer) => {
           layer.on({
-            mouseover: (e: any) => {
+            mouseover: (e: import('leaflet').LeafletMouseEvent) => {
               const layer = e.target;
               layer.setStyle({
                 weight: 5,
@@ -132,10 +131,10 @@ export default function RealLeafletMap({
               });
               layer.bringToFront();
             },
-            mouseout: (e: any) => {
+            mouseout: (e: import('leaflet').LeafletMouseEvent) => {
               geoJsonLayerRef.current.resetStyle(e.target);
             },
-            click: (e: any) => {
+            click: (e: import('leaflet').LeafletMouseEvent) => {
               const countyData = feature.properties;
               const county: County = {
                 id: countyData.id,
@@ -217,7 +216,7 @@ export default function RealLeafletMap({
   useEffect(() => {
     if (!mapRef.current || !geoJsonLayerRef.current) return;
 
-    geoJsonLayerRef.current.eachLayer((layer: any) => {
+    geoJsonLayerRef.current.eachLayer((layer: import('leaflet').Layer & { setStyle: (style: object) => void }) => {
       const feature = layer.feature;
       if (feature) {
         const countyId = feature.properties.id;

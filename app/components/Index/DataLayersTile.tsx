@@ -16,7 +16,7 @@ interface DataLayersTileProps {
   onLayerChange: (layer: DataLayer) => void;
 }
 
-export default function DataLayersTile({ currentLayer, onLayerChange }: DataLayersTileProps) {
+const DataLayersTile = React.memo(function DataLayersTile({ currentLayer, onLayerChange }: DataLayersTileProps) {
   const dataLayers: LayerOption[] = [
     {
       id: 'medicaid',
@@ -110,4 +110,6 @@ export default function DataLayersTile({ currentLayer, onLayerChange }: DataLaye
       </div>
     </div>
   );
-}
+});
+
+export default DataLayersTile;

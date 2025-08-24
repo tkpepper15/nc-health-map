@@ -25,7 +25,7 @@ const defaultFilters = {
   riskLevel: ['low', 'moderate', 'high', 'extreme']
 };
 
-export const useHealthcareStore = create<HealthcareAppState>((set, get) => ({
+export const useHealthcareStore = create<HealthcareAppState>((set) => ({
   // State
   selectedMetric: 'hcvi',
   selectedCounty: null,

@@ -1,11 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import { County, HealthcareMetrics } from '../../types/healthcare';
-import { getLayerColor, getLayerValue } from '../../utils/dataLayers';
 // GeoJSON now loaded dynamically from public/data/nc-counties.json
-import MapLegend from './MapLegend';
-import CountyPopup from './CountyPopup';
 import FallbackMap from './FallbackMap';
 import { DataLayer } from '../DataLayers/DataLayerSelector';
 

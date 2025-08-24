@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 // Dynamic import for Leaflet to avoid SSR issues
-let L: any = null;
+let L: typeof import('leaflet') | null = null;
 
 interface HospitalData {
   id: number;
@@ -26,12 +26,12 @@ interface HospitalData {
 
 interface HospitalLayerProps {
   hospitals: HospitalData[];
-  map: any; // Leaflet map instance
+  map: import('leaflet').Map; // Leaflet map instance
   visible: boolean;
 }
 
 export default function HospitalLayer({ hospitals, map, visible }: HospitalLayerProps) {
-  const layerGroupRef = useRef<any>(null);
+  const layerGroupRef = useRef<import('leaflet').LayerGroup | null>(null);
 
   useEffect(() => {
     if (!map || !hospitals.length) return;
@@ -73,6 +73,7 @@ export default function HospitalLayer({ hospitals, map, visible }: HospitalLayer
         }
 
         // Create custom marker
+        if (!L) return;
         const marker = L.circleMarker([hospital.latitude, hospital.longitude], {
           radius: markerSize,
           fillColor: markerColor,
@@ -171,7 +172,9 @@ export default function HospitalLayer({ hospitals, map, visible }: HospitalLayer
         });
 
         // Add to layer group
-        layerGroupRef.current.addLayer(marker);
+        if (layerGroupRef.current) {
+          layerGroupRef.current.addLayer(marker);
+        }
       });
 
       // Add layer to map if visible
@@ -187,7 +190,7 @@ export default function HospitalLayer({ hospitals, map, visible }: HospitalLayer
         map.removeLayer(layerGroupRef.current);
       }
     };
-  }, [hospitals, map]);
+  }, [hospitals, map, visible]);
 
   // Handle visibility changes
   useEffect(() => {

@@ -12,7 +12,7 @@ export interface CountyHealthData {
   healthcare_access_score?: number
   policy_risk_score?: number
   economic_vulnerability_score?: number
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export interface Hospital {
@@ -24,7 +24,7 @@ export interface Hospital {
   hospital_type: string
   operating_margin?: number
   closure_risk?: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export async function getHealthcareData(filters?: {

@@ -14,7 +14,14 @@ interface MetricsData {
 interface MetricsPanelProps {
   currentLayer: DataLayer;
   metricsData?: MetricsData | null;
-  healthcareData?: any[];
+  healthcareData?: Array<{
+    medicaid_total_enrollment?: number | null;
+    medicaid_expansion_enrollment?: number | null;
+    medicaid_enrollment_rate?: number | null;
+    svi_data?: {
+      svi_overall_percentile?: number | null;
+    } | null;
+  }>;
   isLoading?: boolean;
 }
 
@@ -85,10 +92,10 @@ export default function MetricsPanel({
   // Calculate consistent SVI metrics
   const getSVIMetrics = () => {
     const countiesWithSVI = healthcareData.filter(d => d.svi_data?.svi_overall_percentile !== null && d.svi_data?.svi_overall_percentile !== undefined);
-    const highVulnerability = countiesWithSVI.filter(d => d.svi_data!.svi_overall_percentile >= 0.75).length;
+    const highVulnerability = countiesWithSVI.filter(d => d.svi_data?.svi_overall_percentile && d.svi_data.svi_overall_percentile >= 0.75).length;
     const moderateVulnerability = countiesWithSVI.filter(d => 
-      d.svi_data!.svi_overall_percentile >= 0.5 && d.svi_data!.svi_overall_percentile < 0.75).length;
-    const lowVulnerability = countiesWithSVI.filter(d => d.svi_data!.svi_overall_percentile < 0.5).length;
+      d.svi_data?.svi_overall_percentile && d.svi_data.svi_overall_percentile >= 0.5 && d.svi_data.svi_overall_percentile < 0.75).length;
+    const lowVulnerability = countiesWithSVI.filter(d => d.svi_data?.svi_overall_percentile && d.svi_data.svi_overall_percentile < 0.5).length;
     
     return {
       high: highVulnerability,

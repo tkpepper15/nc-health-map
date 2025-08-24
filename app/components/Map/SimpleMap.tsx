@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { County, HealthcareMetrics } from '../../types/healthcare';
 import { getLayerColor, getLayerValue } from '../../utils/dataLayers';
 // GeoJSON moved to public/data/nc-counties.json
@@ -17,15 +17,12 @@ interface SimpleMapProps {
 }
 
 export default function SimpleMap({ 
-  counties, 
   healthcareData, 
   selectedMetric, 
   onCountyClick, 
   selectedCounty 
 }: SimpleMapProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [mapLoaded, setMapLoaded] = useState(false);
 
   // Initialize simple interactive map
   useEffect(() => {
@@ -58,7 +55,7 @@ export default function SimpleMap({
     { id: 'person', name: 'Person County', x: 460, y: 180, width: 55, height: 45 },
   ];
 
-  const handleCountyClick = (countyData: any) => {
+  const handleCountyClick = (countyData: { id: string; name: string; x: number; y: number; width: number; height: number }) => {
     const county: County = {
       id: countyData.id,
       name: countyData.name,

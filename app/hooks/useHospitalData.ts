@@ -5,20 +5,25 @@ import { useState, useEffect } from 'react';
 export interface HospitalData {
   id: number;
   facility_name: string;
-  alt_name: string;
-  county: string;
+  county_fips?: string;
   city: string;
   facility_type: string;
-  total_beds: number;
-  general_beds: number;
-  total_surgery_rooms: number;
+  total_beds: number | null;
+  general_beds: number | null;
+  total_surgery_rooms: number | null;
   is_major_hospital: boolean;
-  is_emergency_dept: boolean;
+  has_emergency_dept: boolean; // This is the actual field name from API
+  is_emergency_dept?: boolean; // Keep for backward compatibility
   latitude: number;
   longitude: number;
-  address: string;
-  phone: string;
-  licensee: string;
+  address: string | null;
+  phone: string | null;
+  licensee: string | null;
+  // Additional fields from the actual API response
+  hospital_type?: string;
+  state?: string;
+  zip_code?: string;
+  [key: string]: unknown; // Allow additional fields
 }
 
 interface HospitalStats {
@@ -47,7 +52,7 @@ export function useHospitalData() {
 
     const totalBeds = hospitals.reduce((sum, h) => sum + (h.total_beds || 0), 0);
     const majorFacilities = hospitals.filter(h => h.is_major_hospital).length;
-    const emergencyDepts = hospitals.filter(h => h.is_emergency_dept).length;
+    const emergencyDepts = hospitals.filter(h => h.has_emergency_dept || h.is_emergency_dept).length;
 
     return {
       totalCount: hospitals.length,

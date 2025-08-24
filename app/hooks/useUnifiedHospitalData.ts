@@ -28,7 +28,7 @@ interface HospitalDataSource {
 }
 
 // Unified hospital data transformation
-function transformHospitalData(rawData: any, source: 'supabase' | 'file'): HospitalData {
+function transformHospitalData(rawData: Record<string, unknown>, source: 'supabase' | 'file'): HospitalData {
   if (source === 'file') {
     // Transform GeoJSON structure from file
     const props = rawData.properties;
@@ -106,11 +106,11 @@ export function useUnifiedHospitalData() {
           console.log('✅ Using hospital data from API:', {
             count: result.data.length,
             source: result.metadata?.source,
-            majorHospitals: result.data.filter((h: any) => h.is_major_hospital).length
+            majorHospitals: result.data.filter((h: Record<string, unknown>) => h.is_major_hospital).length
           });
 
           // Transform data based on source
-          const transformedData = result.data.map((item: any) => {
+          const transformedData = result.data.map((item: Record<string, unknown>) => {
             // Check if this is file-based data (has properties structure) or direct DB data
             const source = item.properties ? 'file' : 'supabase';
             return transformHospitalData(item, source);

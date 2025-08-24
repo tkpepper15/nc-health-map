@@ -9,7 +9,12 @@ interface BackendStatus {
   endpoint: string
   timestamp: string
   responseTime?: number
-  serverInfo?: any
+  serverInfo?: {
+    is_vercel?: boolean;
+    region?: string;
+    deployment_id?: string;
+    [key: string]: unknown;
+  }
 }
 
 export default function BackendStatusIndicator() {
@@ -35,7 +40,7 @@ export default function BackendStatusIndicator() {
         responseTime,
         serverInfo: data.metadata.server_info
       })
-    } catch (error) {
+    } catch {
       setStatus({
         source: 'mock',
         server: 'local',
@@ -53,7 +58,7 @@ export default function BackendStatusIndicator() {
     checkBackendStatus()
   }, [checkBackendStatus])
 
-  const determineServerInfo = (metadata: any) => {
+  const determineServerInfo = (metadata: { source?: string; fallback_reason?: string; server_info?: Record<string, unknown>; [key: string]: unknown }) => {
     const serverInfo = metadata.server_info || {}
     
     // Determine server type

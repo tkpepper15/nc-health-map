@@ -18,18 +18,20 @@ This application provides an interactive mapping platform to analyze healthcare 
 ## 🏗️ Architecture
 
 ### Frontend (Next.js + TypeScript)
-- **Framework**: Next.js 15.4.1 with React 19
-- **Mapping**: Mapbox GL JS with custom healthcare data layers
+- **Framework**: Next.js 15.4.1 with React 19 and App Router
+- **Mapping**: Leaflet.js with custom healthcare data layers and reusable map components
 - **Styling**: Tailwind CSS for responsive design
-- **State Management**: Zustand for application state
-- **Data Fetching**: Custom hooks with SWR for API integration
+- **State Management**: React hooks with custom data management layer
+- **Database**: Supabase with PostgreSQL and real-time capabilities
+- **Data Fetching**: Custom service layer with proper error handling and caching
+- **Performance**: Memory caching, debouncing, and performance monitoring utilities
 
-### Backend (Python + FastAPI)
-- **API Framework**: FastAPI with automatic OpenAPI documentation
-- **Database**: PostgreSQL 15 with PostGIS extension for geographic data
-- **ORM**: SQLAlchemy with GeoAlchemy2 for spatial queries
-- **Data Processing**: Pandas-based ETL pipeline for CSV ingestion
-- **Authentication**: JWT-based authentication (ready for implementation)
+### Backend Architecture
+- **API Routes**: Next.js API routes with comprehensive error handling
+- **Database**: Supabase PostgreSQL with PostGIS extension for geographic data
+- **Service Layer**: Centralized healthcare and hospital data services
+- **Type Safety**: Comprehensive TypeScript definitions across all layers
+- **Caching**: Multiple caching strategies for optimal performance
 
 ### Infrastructure
 - **Containerization**: Docker Compose for development environment

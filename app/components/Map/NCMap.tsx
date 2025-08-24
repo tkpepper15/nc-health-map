@@ -17,7 +17,6 @@ interface NCMapProps {
 }
 
 export default function NCMap({ 
-  counties, 
   healthcareData, 
   selectedMetric, 
   onCountyClick, 
@@ -111,7 +110,7 @@ export default function NCMap({
               stroke="#374151"
               strokeWidth="1"
               className="cursor-pointer hover:stroke-2 transition-all"
-              onMouseEnter={() => setHoveredCounty(county as any)}
+              onMouseEnter={() => setHoveredCounty(county as County)}
               onMouseLeave={() => setHoveredCounty(null)}
               onClick={() => {
                 const mockCounty: County = {
@@ -179,7 +178,7 @@ export default function NCMap({
         <CountyPopup 
           county={selectedCounty}
           
-          onClose={() => onCountyClick(null as any)}
+          onClose={() => onCountyClick(null!)}
         />
       )}
     </div>

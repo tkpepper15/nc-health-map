@@ -40,7 +40,7 @@ const getLayerInfo = (layer: DataLayer) => {
   }
 };
 
-export default function FloatingDescriptionTile({ currentLayer }: FloatingDescriptionTileProps) {
+const FloatingDescriptionTile = React.memo(function FloatingDescriptionTile({ currentLayer }: FloatingDescriptionTileProps) {
   const layerInfo = getLayerInfo(currentLayer);
 
   return (
@@ -74,4 +74,6 @@ export default function FloatingDescriptionTile({ currentLayer }: FloatingDescri
       </div>
     </div>
   );
-}
+});
+
+export default FloatingDescriptionTile;

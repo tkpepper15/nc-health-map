@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import Header from './components/Layout/Header';
 import MainContent from './components/Layout/MainContent';
 import NCLeafletMap from './components/Map/NCLeafletMap';
@@ -15,7 +15,13 @@ import { County } from './types/healthcare';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'home' | 'index' | 'data' | 'project'>('index');
-  const [selectedHospital, setSelectedHospital] = useState<any>(null);
+  const [selectedHospital, setSelectedHospital] = useState<{
+    id: string | number;
+    facility_name: string;
+    latitude: number;
+    longitude: number;
+    [key: string]: unknown;
+  } | null>(null);
   
   const {
     selectedCounty,
@@ -34,13 +40,12 @@ export default function Home() {
   
   // Real hospital data from NC Division of Health Service Regulation
   const { 
-    hospitals
   } = useHospitalData();
 
   // Layer management
   const [currentLayer, setCurrentLayer] = useState<DataLayer>('medicaid');
 
-  const handleLayerChange = (layer: DataLayer) => {
+  const handleLayerChange = useCallback((layer: DataLayer) => {
     setCurrentLayer(layer);
     // Clear selections when switching to hospital layer
     if (layer === 'hospitals') {
@@ -50,28 +55,61 @@ export default function Home() {
     if (layer !== 'hospitals') {
       setSelectedHospital(null);
     }
-  };
+  }, [setSelectedCounty]);
 
 
-  const handleCountyClick = (county: County | null) => {
+  const handleCountyClick = useCallback((county: County | null) => {
     if (county) {
       setSelectedCounty(county.fips);
       setSelectedHospital(null); // Clear hospital selection when county is selected
     } else {
       setSelectedCounty(null);
     }
-  };
+  }, [setSelectedCounty]);
 
-  const handleHospitalClick = (hospital: any) => {
+  const handleHospitalClick = useCallback((hospital: { id: string | number; facility_name: string; latitude: number; longitude: number; [key: string]: unknown } | null) => {
     if (hospital) {
       setSelectedHospital(hospital);
       setSelectedCounty(null); // Clear county selection when hospital is selected
     } else {
       setSelectedHospital(null);
     }
-  };
+  }, [setSelectedCounty]);
 
-  const selectedCountyData = selectedCounty ? counties.find(c => c.fips === selectedCounty) || null : null;
+  const handleMapClick = useCallback(() => {
+    // Handle clicks on the map container
+    // This can be used to clear selections or handle other map interactions
+  }, []);
+
+  // Memoize expensive computations
+  const selectedCountyData = useMemo(() => 
+    selectedCounty ? counties.find(c => c.fips === selectedCounty) || null : null, 
+    [selectedCounty, counties]
+  );
+  
+  const medicaidEnabled = useMemo(() => currentLayer === 'medicaid', [currentLayer]);
+  
+  // Memoize data summary calculations for better performance
+  const dataSummary = useMemo(() => {
+    const validMedicaidCounties = healthcareData.filter(d => 
+      d.medicaid_enrollment_rate !== null && d.medicaid_enrollment_rate !== undefined
+    );
+    const avgMedicaidRate = validMedicaidCounties.length > 0 ? 
+      (validMedicaidCounties.reduce((sum, d) => sum + (d.medicaid_enrollment_rate || 0), 0) / validMedicaidCounties.length).toFixed(1) + '%'
+      : 'N/A';
+    const ruralCount = healthcareData.filter(d => d.is_rural).length;
+    const sviDataCount = healthcareData.filter(d => 
+      d.svi_data?.svi_overall_percentile !== null && d.svi_data?.svi_overall_percentile !== undefined
+    ).length;
+    
+    return {
+      totalCounties: healthcareData.length,
+      avgMedicaidRate,
+      ruralCount,
+      medicaidDataCount: validMedicaidCounties.length,
+      sviDataCount
+    };
+  }, [healthcareData]);
 
   // Show loading state with debug info
   if (loading) {
@@ -186,25 +224,20 @@ export default function Home() {
                 <div className="grid md:grid-cols-3 gap-6 mb-8">
                   <div className="bg-gray-50 p-6 rounded-lg">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Counties with Data</h3>
-                    <p className="text-3xl font-bold text-blue-600">{healthcareData.length}</p>
+                    <p className="text-3xl font-bold text-blue-600">{dataSummary.totalCounties}</p>
                     <p className="text-sm text-gray-600">North Carolina counties</p>
                   </div>
                   <div className="bg-gray-50 p-6 rounded-lg">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Avg Medicaid Rate</h3>
                     <p className="text-3xl font-bold text-green-600">
-                      {(() => {
-                        const validCounties = healthcareData.filter(d => d.medicaid_enrollment_rate !== null && d.medicaid_enrollment_rate !== undefined);
-                        return validCounties.length > 0 ? 
-                          (validCounties.reduce((sum, d) => sum + (d.medicaid_enrollment_rate || 0), 0) / validCounties.length).toFixed(1) + '%'
-                          : 'N/A';
-                      })()}
+                      {dataSummary.avgMedicaidRate}
                     </p>
                     <p className="text-sm text-gray-600">Across all counties</p>
                   </div>
                   <div className="bg-gray-50 p-6 rounded-lg">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Rural Counties</h3>
                     <p className="text-3xl font-bold text-amber-600">
-                      {healthcareData.filter(d => d.is_rural).length}
+                      {dataSummary.ruralCount}
                     </p>
                     <p className="text-sm text-gray-600">Classified as rural</p>
                   </div>
@@ -215,13 +248,13 @@ export default function Home() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-green-100 rounded">
                       <div className="text-2xl font-bold text-green-700">
-                        {healthcareData.filter(d => d.medicaid_enrollment_rate !== null && d.medicaid_enrollment_rate !== undefined).length}
+                        {dataSummary.medicaidDataCount}
                       </div>
                       <div className="text-sm text-green-600">Counties with Medicaid Data</div>
                     </div>
                     <div className="text-center p-4 bg-blue-100 rounded">
                       <div className="text-2xl font-bold text-blue-700">
-                        {healthcareData.filter(d => d.svi_data?.svi_overall_percentile !== null && d.svi_data?.svi_overall_percentile !== undefined).length}
+                        {dataSummary.sviDataCount}
                       </div>
                       <div className="text-sm text-blue-600">Counties with SVI Data</div>
                     </div>
