@@ -1,0 +1,717 @@
+{
+  "metadata": {
+    "title": "North Carolina County Classifications",
+    "description": "County classifications for Urban, Suburban, Rural, and Tourism-rich counties",
+    "source": "Afonso 2016, Public Finance Review 44(6):691-721, updated with recent data",
+    "total_counties": 100,
+    "classifications": {
+      "tourism": 19,
+      "rural": 66,
+      "urban": 10,
+      "suburban": 5
+    },
+    "processed_date": "2025-09-03T15:55:57.296Z"
+  },
+  "counties": {
+    "37001": {
+      "county_name": "Alamance",
+      "classification": "tourism",
+      "fips_code": "37001",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37003": {
+      "county_name": "Alexander",
+      "classification": "rural",
+      "fips_code": "37003",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37005": {
+      "county_name": "Alleghany",
+      "classification": "rural",
+      "fips_code": "37005",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37007": {
+      "county_name": "Anson",
+      "classification": "rural",
+      "fips_code": "37007",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37009": {
+      "county_name": "Ashe",
+      "classification": "rural",
+      "fips_code": "37009",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37011": {
+      "county_name": "Avery",
+      "classification": "rural",
+      "fips_code": "37011",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37013": {
+      "county_name": "Beaufort",
+      "classification": "rural",
+      "fips_code": "37013",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37015": {
+      "county_name": "Bertie",
+      "classification": "rural",
+      "fips_code": "37015",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37017": {
+      "county_name": "Bladen",
+      "classification": "rural",
+      "fips_code": "37017",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37019": {
+      "county_name": "Brunswick",
+      "classification": "tourism",
+      "fips_code": "37019",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37021": {
+      "county_name": "Buncombe",
+      "classification": "urban",
+      "fips_code": "37021",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Major metropolitan area with high population density and economic activity"
+    },
+    "37023": {
+      "county_name": "Burke",
+      "classification": "rural",
+      "fips_code": "37023",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37025": {
+      "county_name": "Cabarrus",
+      "classification": "tourism",
+      "fips_code": "37025",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37027": {
+      "county_name": "Caldwell",
+      "classification": "rural",
+      "fips_code": "37027",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37029": {
+      "county_name": "Camden",
+      "classification": "rural",
+      "fips_code": "37029",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37031": {
+      "county_name": "Carteret",
+      "classification": "tourism",
+      "fips_code": "37031",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37033": {
+      "county_name": "Caswell",
+      "classification": "rural",
+      "fips_code": "37033",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37035": {
+      "county_name": "Catawba",
+      "classification": "tourism",
+      "fips_code": "37035",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37037": {
+      "county_name": "Chatham",
+      "classification": "rural",
+      "fips_code": "37037",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37039": {
+      "county_name": "Cherokee",
+      "classification": "rural",
+      "fips_code": "37039",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37041": {
+      "county_name": "Chowan",
+      "classification": "rural",
+      "fips_code": "37041",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37043": {
+      "county_name": "Clay",
+      "classification": "rural",
+      "fips_code": "37043",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37045": {
+      "county_name": "Cleveland",
+      "classification": "rural",
+      "fips_code": "37045",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37047": {
+      "county_name": "Columbus",
+      "classification": "rural",
+      "fips_code": "37047",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37049": {
+      "county_name": "Craven",
+      "classification": "rural",
+      "fips_code": "37049",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37051": {
+      "county_name": "Cumberland",
+      "classification": "urban",
+      "fips_code": "37051",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Major metropolitan area with high population density and economic activity"
+    },
+    "37053": {
+      "county_name": "Currituck",
+      "classification": "suburban",
+      "fips_code": "37053",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Adjacent to urban areas, mixed residential and commercial development"
+    },
+    "37055": {
+      "county_name": "Dare",
+      "classification": "tourism",
+      "fips_code": "37055",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37057": {
+      "county_name": "Davidson",
+      "classification": "rural",
+      "fips_code": "37057",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37059": {
+      "county_name": "Davie",
+      "classification": "rural",
+      "fips_code": "37059",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37061": {
+      "county_name": "Duplin",
+      "classification": "rural",
+      "fips_code": "37061",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37063": {
+      "county_name": "Durham",
+      "classification": "urban",
+      "fips_code": "37063",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Major metropolitan area with high population density and economic activity"
+    },
+    "37065": {
+      "county_name": "Edgecombe",
+      "classification": "rural",
+      "fips_code": "37065",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37067": {
+      "county_name": "Forsyth",
+      "classification": "urban",
+      "fips_code": "37067",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Major metropolitan area with high population density and economic activity"
+    },
+    "37069": {
+      "county_name": "Franklin",
+      "classification": "suburban",
+      "fips_code": "37069",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Adjacent to urban areas, mixed residential and commercial development"
+    },
+    "37071": {
+      "county_name": "Gaston",
+      "classification": "urban",
+      "fips_code": "37071",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Major metropolitan area with high population density and economic activity"
+    },
+    "37073": {
+      "county_name": "Gates",
+      "classification": "suburban",
+      "fips_code": "37073",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Adjacent to urban areas, mixed residential and commercial development"
+    },
+    "37075": {
+      "county_name": "Graham",
+      "classification": "rural",
+      "fips_code": "37075",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37077": {
+      "county_name": "Granville",
+      "classification": "rural",
+      "fips_code": "37077",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37079": {
+      "county_name": "Greene",
+      "classification": "rural",
+      "fips_code": "37079",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37081": {
+      "county_name": "Guilford",
+      "classification": "urban",
+      "fips_code": "37081",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Major metropolitan area with high population density and economic activity"
+    },
+    "37083": {
+      "county_name": "Halifax",
+      "classification": "rural",
+      "fips_code": "37083",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37085": {
+      "county_name": "Harnett",
+      "classification": "rural",
+      "fips_code": "37085",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37087": {
+      "county_name": "Haywood",
+      "classification": "tourism",
+      "fips_code": "37087",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37089": {
+      "county_name": "Henderson",
+      "classification": "tourism",
+      "fips_code": "37089",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37091": {
+      "county_name": "Hertford",
+      "classification": "rural",
+      "fips_code": "37091",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37093": {
+      "county_name": "Hoke",
+      "classification": "rural",
+      "fips_code": "37093",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37095": {
+      "county_name": "Hyde",
+      "classification": "rural",
+      "fips_code": "37095",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37097": {
+      "county_name": "Iredell",
+      "classification": "tourism",
+      "fips_code": "37097",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37099": {
+      "county_name": "Jackson",
+      "classification": "tourism",
+      "fips_code": "37099",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37101": {
+      "county_name": "Johnston",
+      "classification": "tourism",
+      "fips_code": "37101",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37103": {
+      "county_name": "Jones",
+      "classification": "rural",
+      "fips_code": "37103",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37105": {
+      "county_name": "Lee",
+      "classification": "rural",
+      "fips_code": "37105",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37107": {
+      "county_name": "Lenoir",
+      "classification": "rural",
+      "fips_code": "37107",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37109": {
+      "county_name": "Lincoln",
+      "classification": "suburban",
+      "fips_code": "37109",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Adjacent to urban areas, mixed residential and commercial development"
+    },
+    "37111": {
+      "county_name": "McDowell",
+      "classification": "rural",
+      "fips_code": "37111",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37113": {
+      "county_name": "Macon",
+      "classification": "rural",
+      "fips_code": "37113",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37115": {
+      "county_name": "Madison",
+      "classification": "rural",
+      "fips_code": "37115",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37117": {
+      "county_name": "Martin",
+      "classification": "rural",
+      "fips_code": "37117",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37119": {
+      "county_name": "Mecklenburg",
+      "classification": "urban",
+      "fips_code": "37119",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Major metropolitan area with high population density and economic activity"
+    },
+    "37121": {
+      "county_name": "Mitchell",
+      "classification": "rural",
+      "fips_code": "37121",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37123": {
+      "county_name": "Montgomery",
+      "classification": "rural",
+      "fips_code": "37123",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37125": {
+      "county_name": "Moore",
+      "classification": "tourism",
+      "fips_code": "37125",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37127": {
+      "county_name": "Nash",
+      "classification": "tourism",
+      "fips_code": "37127",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37129": {
+      "county_name": "New Hanover",
+      "classification": "urban",
+      "fips_code": "37129",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Major metropolitan area with high population density and economic activity"
+    },
+    "37131": {
+      "county_name": "Northampton",
+      "classification": "rural",
+      "fips_code": "37131",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37133": {
+      "county_name": "Onslow",
+      "classification": "tourism",
+      "fips_code": "37133",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37135": {
+      "county_name": "Orange",
+      "classification": "tourism",
+      "fips_code": "37135",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37137": {
+      "county_name": "Pamlico",
+      "classification": "rural",
+      "fips_code": "37137",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37139": {
+      "county_name": "Pasquotank",
+      "classification": "rural",
+      "fips_code": "37139",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37141": {
+      "county_name": "Pender",
+      "classification": "rural",
+      "fips_code": "37141",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37143": {
+      "county_name": "Perquimans",
+      "classification": "rural",
+      "fips_code": "37143",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37145": {
+      "county_name": "Person",
+      "classification": "rural",
+      "fips_code": "37145",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37147": {
+      "county_name": "Pitt",
+      "classification": "tourism",
+      "fips_code": "37147",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37149": {
+      "county_name": "Polk",
+      "classification": "rural",
+      "fips_code": "37149",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37151": {
+      "county_name": "Randolph",
+      "classification": "rural",
+      "fips_code": "37151",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37153": {
+      "county_name": "Richmond",
+      "classification": "rural",
+      "fips_code": "37153",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37155": {
+      "county_name": "Robeson",
+      "classification": "rural",
+      "fips_code": "37155",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37157": {
+      "county_name": "Rockingham",
+      "classification": "rural",
+      "fips_code": "37157",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37159": {
+      "county_name": "Rowan",
+      "classification": "suburban",
+      "fips_code": "37159",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Adjacent to urban areas, mixed residential and commercial development"
+    },
+    "37161": {
+      "county_name": "Rutherford",
+      "classification": "tourism",
+      "fips_code": "37161",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37163": {
+      "county_name": "Sampson",
+      "classification": "rural",
+      "fips_code": "37163",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37165": {
+      "county_name": "Scotland",
+      "classification": "rural",
+      "fips_code": "37165",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37167": {
+      "county_name": "Stanly",
+      "classification": "rural",
+      "fips_code": "37167",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37169": {
+      "county_name": "Stokes",
+      "classification": "rural",
+      "fips_code": "37169",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37171": {
+      "county_name": "Surry",
+      "classification": "rural",
+      "fips_code": "37171",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37173": {
+      "county_name": "Swain",
+      "classification": "tourism",
+      "fips_code": "37173",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37175": {
+      "county_name": "Transylvania",
+      "classification": "rural",
+      "fips_code": "37175",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37177": {
+      "county_name": "Tyrrell",
+      "classification": "rural",
+      "fips_code": "37177",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37179": {
+      "county_name": "Union",
+      "classification": "urban",
+      "fips_code": "37179",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Major metropolitan area with high population density and economic activity"
+    },
+    "37181": {
+      "county_name": "Vance",
+      "classification": "rural",
+      "fips_code": "37181",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37183": {
+      "county_name": "Wake",
+      "classification": "urban",
+      "fips_code": "37183",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Major metropolitan area with high population density and economic activity"
+    },
+    "37185": {
+      "county_name": "Warren",
+      "classification": "rural",
+      "fips_code": "37185",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37187": {
+      "county_name": "Washington",
+      "classification": "rural",
+      "fips_code": "37187",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37189": {
+      "county_name": "Watauga",
+      "classification": "tourism",
+      "fips_code": "37189",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Economy significantly dependent on tourism industry"
+    },
+    "37191": {
+      "county_name": "Wayne",
+      "classification": "rural",
+      "fips_code": "37191",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37193": {
+      "county_name": "Wilkes",
+      "classification": "rural",
+      "fips_code": "37193",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37195": {
+      "county_name": "Wilson",
+      "classification": "rural",
+      "fips_code": "37195",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37197": {
+      "county_name": "Yadkin",
+      "classification": "rural",
+      "fips_code": "37197",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    },
+    "37199": {
+      "county_name": "Yancey",
+      "classification": "rural",
+      "fips_code": "37199",
+      "classification_source": "Afonso 2016, updated 2024",
+      "notes": "Lower population density, agriculture or resource-based economy"
+    }
+  }
+}

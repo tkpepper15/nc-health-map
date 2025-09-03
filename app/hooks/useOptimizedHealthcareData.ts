@@ -10,9 +10,10 @@ function transformBackendData(backendItem: Record<string, unknown>): HealthcareM
   const medicaidRate = backendItem.medicaid_enrollment_rate;
   
   // Only calculate Medicaid totals if we have BOTH population and rate
+  // Note: medicaidRate is per 1000 population, NOT percentage
   let medicaidTotalEnrollment = null;
   if (typeof totalPopulation === 'number' && typeof medicaidRate === 'number') {
-    medicaidTotalEnrollment = Math.round(totalPopulation * (medicaidRate / 100));
+    medicaidTotalEnrollment = Math.round(totalPopulation * (medicaidRate / 1000));
   }
   
   return {
@@ -203,13 +204,21 @@ export function useOptimizedHealthcareData() {
         // If we get here, API responded but had no data
         console.log('⚠️ Supabase API responded but returned no data');
       } catch (apiError) {
-        console.log('⚠️ Supabase connection failed:', apiError);
-        console.log('📂 Falling back to local data for development...');
+        console.error('❌ Supabase connection failed:', apiError);
+        setError('Unable to connect to Supabase database. Please check your connection.');
+        setData(() => ({
+          healthcareData: [],
+          counties: [],
+          lastUpdated: null,
+          updateInProgress: false
+        }));
+        setLoading(false);
+        return;
       }
 
-      // No fallback data available - set error state
-      console.log('❌ No fallback data available after Supabase failure');
-      setError('Unable to connect to database and no local data available');
+      // This shouldn't be reached since we return above, but keeping for safety
+      console.error('❌ Supabase API call failed - no fallback available');
+      setError('Database connection required. Please ensure Supabase is accessible.');
       
       setData(() => ({
         healthcareData: [],

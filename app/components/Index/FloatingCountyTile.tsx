@@ -3,6 +3,8 @@
 import React from 'react';
 import { HealthcareMetrics } from '../../types/healthcare';
 import { DataLayer } from '../DataLayers/DataLayerSelector';
+import { formatMedicaidRate } from '../../utils/medicaidHelpers';
+import { useCountyClassifications } from '../../hooks/useCountyClassifications';
 
 interface FloatingCountyTileProps {
   county: HealthcareMetrics | null;
@@ -10,7 +12,9 @@ interface FloatingCountyTileProps {
   currentLayer: DataLayer;
 }
 
-export default function FloatingCountyTile({ county, onClose, currentLayer }: FloatingCountyTileProps) {
+export default function FloatingCountyTile({
+ county, onClose, currentLayer }: FloatingCountyTileProps) {
+  const { getClassification } = useCountyClassifications();
   if (!county) return null;
 
   const getLayerMetric = () => {
@@ -18,7 +22,7 @@ export default function FloatingCountyTile({ county, onClose, currentLayer }: Fl
       case 'medicaid':
         return {
           label: 'Medicaid Enrollment Rate',
-          value: county.medicaid_enrollment_rate ? `${county.medicaid_enrollment_rate.toFixed(1)}%` : 'N/A',
+          value: formatMedicaidRate(county.medicaid_enrollment_rate),
           description: 'Percentage of population enrolled in Medicaid'
         };
       case 'svi':
@@ -30,7 +34,7 @@ export default function FloatingCountyTile({ county, onClose, currentLayer }: Fl
       case 'hospitals':
         return {
           label: 'Healthcare Access',
-          value: county.is_rural ? 'Rural Classification' : 'Urban Classification',
+          value: `${getClassification(county.fips_code)} Classification`,
           description: 'Geographic classification affecting healthcare access'
         };
       default:
@@ -89,7 +93,7 @@ export default function FloatingCountyTile({ county, onClose, currentLayer }: Fl
           
           <div className="text-center p-2 bg-gray-50 rounded">
             <div className="text-sm font-semibold text-gray-900">
-              {county.is_rural ? 'Rural' : 'Urban'}
+              {getClassification(county.fips_code)}
             </div>
             <div className="text-xs text-gray-600">Type</div>
           </div>
@@ -101,7 +105,7 @@ export default function FloatingCountyTile({ county, onClose, currentLayer }: Fl
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Medicaid Enrollment</span>
               <span className="font-medium text-gray-900">
-                {county.medicaid_enrollment_rate.toFixed(1)}%
+                {formatMedicaidRate(county.medicaid_enrollment_rate)}
               </span>
             </div>
           )}

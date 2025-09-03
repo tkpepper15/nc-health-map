@@ -31,6 +31,21 @@ export interface HealthcareMetrics {
   medicaid_total_enrollment: number | null;
   medicaid_expansion_enrollment: number | null;
   medicaid_traditional_enrollment: number | null;
+  medicaid_aged: number | null;
+  medicaid_disabled: number | null;
+  medicaid_blind: number | null;
+  medicaid_children: number | null;
+  medicaid_pregnant: number | null;
+  medicaid_infants_and_children: number | null;
+  medicaid_other_child: number | null;
+  medicaid_pregnant_women: number | null;
+  medicaid_family_planning: number | null;
+  medicaid_tanf_under_21: number | null;
+  medicaid_tanf_21_and_over: number | null;
+  medicaid_mchip: number | null;
+  medicaid_bcc: number | null;
+  medicaid_refugees: number | null;
+  medicaid_covid_19: number | null;
   
   // SVI Data
   svi_data?: {

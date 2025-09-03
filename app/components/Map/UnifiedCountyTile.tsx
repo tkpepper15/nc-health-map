@@ -3,6 +3,8 @@
 import React from 'react';
 import { HealthcareMetrics } from '../../types/healthcare';
 import { DataLayer } from '../DataLayers/DataLayerSelector';
+import { formatMedicaidRate } from '../../utils/medicaidHelpers';
+import { useCountyClassifications } from '../../hooks/useCountyClassifications';
 
 interface Hospital {
   id: string | number;
@@ -57,6 +59,8 @@ export default function UnifiedCountyTile({
   isFixed = false, 
   onClose 
 }: UnifiedCountyTileProps) {
+  const { getClassification, getClassificationColor } = useCountyClassifications();
+  
   if (!county && !hospital) return null;
 
   const getLayerData = () => {
@@ -110,9 +114,223 @@ export default function UnifiedCountyTile({
     }
 
     switch (currentLayer) {
+      // HCVI Layers
+      case 'hcvi_composite':
+        return {
+          primaryValue: county.hcvi_composite?.toFixed(1) || 'N/A',
+          primaryLabel: 'HCVI Composite Score (1-10)',
+          secondaryData: [
+            { label: 'Vulnerability Category', value: county.vulnerability_category || 'N/A' },
+            { label: 'Healthcare Access', value: county.healthcare_access_score?.toFixed(1) || 'N/A' },
+            { label: 'Policy Risk', value: county.policy_risk_score?.toFixed(1) || 'N/A' },
+            { label: 'Economic Vulnerability', value: county.economic_vulnerability_score?.toFixed(1) || 'N/A' }
+          ],
+          color: 'red'
+        };
+      case 'healthcare_access':
+        return {
+          primaryValue: county.healthcare_access_score?.toFixed(1) || 'N/A',
+          primaryLabel: 'Healthcare Access Score',
+          secondaryData: [
+            { label: 'Provider Density', value: county.healthcareAccess?.providerDensity?.toFixed(1) || 'N/A' },
+            { label: 'Geographic Access', value: county.healthcareAccess?.geographicAccess?.toFixed(1) || 'N/A' },
+            { label: 'Insurance Coverage', value: county.healthcareAccess?.insuranceCoverage ? `${county.healthcareAccess.insuranceCoverage.toFixed(1)}%` : 'N/A' }
+          ],
+          color: 'blue'
+        };
+      case 'policy_risk':
+        return {
+          primaryValue: county.policy_risk_score?.toFixed(1) || 'N/A',
+          primaryLabel: 'Policy Risk Score',
+          secondaryData: [
+            { label: 'Medicaid Dependency', value: county.policyRisk?.medicaidDependency?.toFixed(1) || 'N/A' },
+            { label: 'Federal Funding Reliance', value: county.policyRisk?.federalFundingReliance?.toFixed(1) || 'N/A' },
+            { label: 'SNAP Vulnerability', value: county.policyRisk?.snapVulnerability?.toFixed(1) || 'N/A' }
+          ],
+          color: 'amber'
+        };
+      case 'economic_vulnerability':
+        return {
+          primaryValue: county.economic_vulnerability_score?.toFixed(1) || 'N/A',
+          primaryLabel: 'Economic Vulnerability Score',
+          secondaryData: [
+            { label: 'Healthcare Employment', value: county.economicVulnerability?.healthcareEmployment ? `${county.economicVulnerability.healthcareEmployment.toFixed(1)}%` : 'N/A' },
+            { label: 'Social Determinants', value: county.economicVulnerability?.socialDeterminants?.toFixed(1) || 'N/A' }
+          ],
+          color: 'purple'
+        };
+      
+      // Medicaid Layers
+      case 'medicaid_total':
+        return {
+          primaryValue: formatMedicaidRate(county.medicaid_enrollment_rate),
+          primaryLabel: 'Total Medicaid Enrollment',
+          secondaryData: [
+            { label: 'Total Enrolled', value: county.medicaid_total_enrollment?.toLocaleString() || 'N/A' },
+            { label: 'Population', value: county.population_2020?.toLocaleString() || 'N/A' },
+            { label: 'Dependency Ratio', value: county.medicaid_dependency_ratio?.toFixed(2) || 'N/A' }
+          ],
+          color: 'blue'
+        };
+      case 'medicaid_expansion':
+        return {
+          primaryValue: county.medicaid_expansion_enrollment?.toLocaleString() || 'N/A',
+          primaryLabel: 'Medicaid Expansion Adults',
+          secondaryData: [
+            { label: 'Total Medicaid', value: formatMedicaidRate(county.medicaid_enrollment_rate) },
+            { label: 'Population', value: county.population_2020?.toLocaleString() || 'N/A' },
+            { label: 'Traditional Medicaid', value: county.medicaid_traditional_enrollment?.toLocaleString() || 'N/A' }
+          ],
+          color: 'blue'
+        };
+      case 'medicaid_aged':
+      case 'medicaid_disabled':
+      case 'medicaid_blind':
+      case 'medicaid_children':
+      case 'medicaid_pregnant':
+        const categoryName = currentLayer.replace('medicaid_', '').replace('_', ' ');
+        return {
+          primaryValue: formatMedicaidRate(county.medicaid_enrollment_rate),
+          primaryLabel: `Medicaid - ${categoryName.charAt(0).toUpperCase() + categoryName.slice(1)}`,
+          secondaryData: [
+            { label: 'Total Medicaid Rate', value: formatMedicaidRate(county.medicaid_enrollment_rate) },
+            { label: 'Population', value: county.population_2020?.toLocaleString() || 'N/A' },
+            { label: 'County Type', value: getClassification(county.fips_code) }
+          ],
+          color: 'blue'
+        };
+      
+      // SVI Layers
+      case 'svi_overall':
+        return {
+          primaryValue: county.svi_data?.svi_overall_percentile ? `${(county.svi_data.svi_overall_percentile * 100).toFixed(0)}th` : 'N/A',
+          primaryLabel: 'Overall SVI Percentile',
+          secondaryData: [
+            { label: 'Socioeconomic', value: county.svi_data?.socioeconomic_percentile ? `${(county.svi_data.socioeconomic_percentile * 100).toFixed(0)}th` : 'N/A' },
+            { label: 'Household Comp.', value: county.svi_data?.household_composition_percentile ? `${(county.svi_data.household_composition_percentile * 100).toFixed(0)}th` : 'N/A' },
+            { label: 'Housing/Transport', value: county.svi_data?.housing_transport_percentile ? `${(county.svi_data.housing_transport_percentile * 100).toFixed(0)}th` : 'N/A' }
+          ],
+          color: 'amber'
+        };
+      case 'svi_socioeconomic':
+        return {
+          primaryValue: county.svi_data?.socioeconomic_percentile ? `${(county.svi_data.socioeconomic_percentile * 100).toFixed(0)}th` : 'N/A',
+          primaryLabel: 'SVI Theme 1: Socioeconomic',
+          secondaryData: [
+            { label: 'Below 150% Poverty', value: county.svi_data?.poverty_150_pct ? `${county.svi_data.poverty_150_pct.toFixed(1)}%` : 'N/A' },
+            { label: 'Unemployment', value: county.svi_data?.unemployment_pct ? `${county.svi_data.unemployment_pct.toFixed(1)}%` : 'N/A' },
+            { label: 'No Insurance', value: county.svi_data?.no_insurance_pct ? `${county.svi_data.no_insurance_pct.toFixed(1)}%` : 'N/A' }
+          ],
+          color: 'amber'
+        };
+      case 'svi_household':
+        return {
+          primaryValue: county.svi_data?.household_composition_percentile ? `${(county.svi_data.household_composition_percentile * 100).toFixed(0)}th` : 'N/A',
+          primaryLabel: 'SVI Theme 2: Household Composition',
+          secondaryData: [
+            { label: 'Age 65+ Population', value: county.svi_data?.age65_older_pct ? `${county.svi_data.age65_older_pct.toFixed(1)}%` : 'N/A' },
+            { label: 'Age <17 Population', value: county.svi_data?.age17_younger_pct ? `${county.svi_data.age17_younger_pct.toFixed(1)}%` : 'N/A' },
+            { label: 'Disability', value: county.svi_data?.disability_pct ? `${county.svi_data.disability_pct.toFixed(1)}%` : 'N/A' }
+          ],
+          color: 'amber'
+        };
+      case 'svi_minority':
+        return {
+          primaryValue: county.svi_data?.racial_minority_percentile ? `${(county.svi_data.racial_minority_percentile * 100).toFixed(0)}th` : 'N/A',
+          primaryLabel: 'SVI Theme 3: Racial & Ethnic Minority',
+          secondaryData: [
+            { label: 'Minority Population', value: county.svi_data?.minority_pct ? `${county.svi_data.minority_pct.toFixed(1)}%` : 'N/A' },
+            { label: 'Limited English', value: county.svi_data?.limited_english_pct ? `${county.svi_data.limited_english_pct.toFixed(1)}%` : 'N/A' }
+          ],
+          color: 'amber'
+        };
+      case 'svi_housing':
+        return {
+          primaryValue: county.svi_data?.housing_transport_percentile ? `${(county.svi_data.housing_transport_percentile * 100).toFixed(0)}th` : 'N/A',
+          primaryLabel: 'SVI Theme 4: Housing & Transportation',
+          secondaryData: [
+            { label: 'No Vehicle Access', value: county.svi_data?.no_vehicle_pct ? `${county.svi_data.no_vehicle_pct.toFixed(1)}%` : 'N/A' },
+            { label: 'Mobile Homes', value: county.svi_data?.mobile_homes_pct ? `${county.svi_data.mobile_homes_pct.toFixed(1)}%` : 'N/A' },
+            { label: 'Crowded Housing', value: county.svi_data?.crowded_housing_pct ? `${county.svi_data.crowded_housing_pct.toFixed(1)}%` : 'N/A' }
+          ],
+          color: 'amber'
+        };
+      
+      // Individual SVI Metrics
+      case 'svi_poverty':
+        return {
+          primaryValue: county.svi_data?.poverty_150_pct ? `${county.svi_data.poverty_150_pct.toFixed(1)}%` : 'N/A',
+          primaryLabel: 'Below 150% Poverty Line',
+          secondaryData: [
+            { label: 'Overall SVI Rank', value: county.svi_data?.svi_overall_percentile ? `${(county.svi_data.svi_overall_percentile * 100).toFixed(0)}th` : 'N/A' },
+            { label: 'County Type', value: getClassification(county.fips_code) },
+            { label: 'Population', value: county.population_2020?.toLocaleString() || 'N/A' }
+          ],
+          color: 'red'
+        };
+      case 'svi_no_insurance':
+        return {
+          primaryValue: county.svi_data?.no_insurance_pct ? `${county.svi_data.no_insurance_pct.toFixed(1)}%` : 'N/A',
+          primaryLabel: 'No Health Insurance',
+          secondaryData: [
+            { label: 'Medicaid Rate', value: formatMedicaidRate(county.medicaid_enrollment_rate) },
+            { label: 'County Type', value: getClassification(county.fips_code) },
+            { label: 'Population', value: county.population_2020?.toLocaleString() || 'N/A' }
+          ],
+          color: 'red'
+        };
+      case 'svi_unemployment':
+        return {
+          primaryValue: county.svi_data?.unemployment_pct ? `${county.svi_data.unemployment_pct.toFixed(1)}%` : 'N/A',
+          primaryLabel: 'Unemployment Rate',
+          secondaryData: [
+            { label: 'Poverty Rate', value: county.svi_data?.poverty_150_pct ? `${county.svi_data.poverty_150_pct.toFixed(1)}%` : 'N/A' },
+            { label: 'County Type', value: getClassification(county.fips_code) },
+            { label: 'Population', value: county.population_2020?.toLocaleString() || 'N/A' }
+          ],
+          color: 'red'
+        };
+      case 'svi_disability':
+        return {
+          primaryValue: county.svi_data?.disability_pct ? `${county.svi_data.disability_pct.toFixed(1)}%` : 'N/A',
+          primaryLabel: 'Population with Disability',
+          secondaryData: [
+            { label: 'Age 65+ Population', value: county.svi_data?.age65_older_pct ? `${county.svi_data.age65_older_pct.toFixed(1)}%` : 'N/A' },
+            { label: 'Medicaid Rate', value: formatMedicaidRate(county.medicaid_enrollment_rate) },
+            { label: 'County Type', value: getClassification(county.fips_code) }
+          ],
+          color: 'purple'
+        };
+      
+      // Hospital Layers
+      case 'hospitals':
+        return {
+          primaryValue: getClassification(county.fips_code),
+          primaryLabel: 'County Type',
+          secondaryData: [
+            { label: 'Population', value: county.population_2020?.toLocaleString() || 'N/A' },
+            { label: 'Medicaid Rate', value: formatMedicaidRate(county.medicaid_enrollment_rate) },
+            { label: 'SVI Score', value: county.svi_data?.svi_overall_percentile ? `${(county.svi_data.svi_overall_percentile * 100).toFixed(0)}th` : 'N/A' }
+          ],
+          color: getClassificationColor(county.fips_code)
+        };
+      case 'hospital_ownership':
+      case 'private_equity':
+        return {
+          primaryValue: getClassification(county.fips_code),
+          primaryLabel: 'County Type',
+          secondaryData: [
+            { label: 'Population', value: county.population_2020?.toLocaleString() || 'N/A' },
+            { label: 'HCVI Score', value: county.hcvi_composite?.toFixed(1) || 'N/A' },
+            { label: 'Healthcare Access', value: county.healthcare_access_score?.toFixed(1) || 'N/A' }
+          ],
+          color: getClassificationColor(county.fips_code)
+        };
+      
+      // Legacy layers
       case 'medicaid':
         return {
-          primaryValue: county.medicaid_enrollment_rate ? `${county.medicaid_enrollment_rate.toFixed(1)}%` : 'N/A',
+          primaryValue: formatMedicaidRate(county.medicaid_enrollment_rate),
           primaryLabel: 'Medicaid Enrollment',
           secondaryData: [
             { label: 'Total Enrolled', value: county.medicaid_total_enrollment?.toLocaleString() || 'N/A' },
@@ -128,27 +346,21 @@ export default function UnifiedCountyTile({
           secondaryData: [
             { label: 'Socioeconomic', value: county.svi_data?.socioeconomic_percentile ? `${(county.svi_data.socioeconomic_percentile * 100).toFixed(0)}th` : 'N/A' },
             { label: 'Household Comp.', value: county.svi_data?.household_composition_percentile ? `${(county.svi_data.household_composition_percentile * 100).toFixed(0)}th` : 'N/A' },
-            { label: 'Classification', value: county.is_rural ? 'Rural' : 'Urban' }
+            { label: 'Classification', value: getClassification(county.fips_code) }
           ],
           color: 'amber'
         };
-      case 'hospitals':
-        return {
-          primaryValue: county.is_rural ? 'Rural' : 'Urban',
-          primaryLabel: 'County Type',
-          secondaryData: [
-            { label: 'Population', value: county.population_2020?.toLocaleString() || 'N/A' },
-            { label: 'Medicaid Rate', value: county.medicaid_enrollment_rate ? `${county.medicaid_enrollment_rate.toFixed(1)}%` : 'N/A' },
-            { label: 'SVI Score', value: county.svi_data?.svi_overall_percentile ? `${(county.svi_data.svi_overall_percentile * 100).toFixed(0)}th` : 'N/A' }
-          ],
-          color: 'green'
-        };
+      
       default:
         return {
-          primaryValue: 'N/A',
-          primaryLabel: 'Select Layer',
-          secondaryData: [],
-          color: 'gray'
+          primaryValue: county.hcvi_composite?.toFixed(1) || 'N/A',
+          primaryLabel: 'HCVI Composite Score',
+          secondaryData: [
+            { label: 'Vulnerability', value: county.vulnerability_category || 'N/A' },
+            { label: 'County Type', value: getClassification(county.fips_code) },
+            { label: 'Population', value: county.population_2020?.toLocaleString() || 'N/A' }
+          ],
+          color: 'red'
         };
     }
   };
@@ -158,6 +370,8 @@ export default function UnifiedCountyTile({
     blue: 'border-blue-200 bg-blue-50',
     amber: 'border-amber-200 bg-amber-50',
     green: 'border-green-200 bg-green-50',
+    red: 'border-red-200 bg-red-50',
+    purple: 'border-purple-200 bg-purple-50',
     gray: 'border-gray-200 bg-gray-50'
   };
 
@@ -165,6 +379,8 @@ export default function UnifiedCountyTile({
     blue: 'text-blue-700',
     amber: 'text-amber-700',
     green: 'text-green-700',
+    red: 'text-red-700',
+    purple: 'text-purple-700',
     gray: 'text-gray-700'
   };
 
@@ -212,7 +428,7 @@ export default function UnifiedCountyTile({
               </>
             ) : (
               <>
-                FIPS: {county?.fips_code} • {county?.is_rural ? 'Rural' : 'Urban'}
+                FIPS: {county?.fips_code} • {getClassification(county.fips_code)}
               </>
             )}
           </p>

@@ -3,6 +3,8 @@
 import React from 'react';
 import { HealthcareMetrics } from '../../types/healthcare';
 import { DataLayer } from '../DataLayers/DataLayerSelector';
+import { formatMedicaidRate } from '../../utils/medicaidHelpers';
+import { useCountyClassifications } from '../../hooks/useCountyClassifications';
 
 interface FloatingHoverTileProps {
   county: HealthcareMetrics | null;
@@ -10,14 +12,16 @@ interface FloatingHoverTileProps {
   isClicked?: boolean;
 }
 
-export default function FloatingHoverTile({ county, currentLayer, isClicked = false }: FloatingHoverTileProps) {
+export default function FloatingHoverTile({
+ county, currentLayer, isClicked = false }: FloatingHoverTileProps) {
+  const { getClassification } = useCountyClassifications();
   if (!county) return null;
 
   const getLayerMetric = () => {
     switch (currentLayer) {
       case 'medicaid':
         return {
-          value: county.medicaid_enrollment_rate ? `${county.medicaid_enrollment_rate.toFixed(1)}%` : 'N/A',
+          value: formatMedicaidRate(county.medicaid_enrollment_rate),
           label: 'Medicaid Enrollment'
         };
       case 'svi':
@@ -27,7 +31,7 @@ export default function FloatingHoverTile({ county, currentLayer, isClicked = fa
         };
       case 'hospitals':
         return {
-          value: county.is_rural ? 'Rural' : 'Urban',
+          value: getClassification(county.fips_code),
           label: 'Classification'
         };
       default:
@@ -66,7 +70,7 @@ export default function FloatingHoverTile({ county, currentLayer, isClicked = fa
             </div>
             <div className="text-center">
               <div className="text-sm font-semibold text-gray-900">
-                {county.is_rural ? 'Rural' : 'Urban'}
+                {getClassification(county.fips_code)}
               </div>
               <div className="text-xs text-gray-600">Type</div>
             </div>
@@ -87,7 +91,7 @@ export default function FloatingHoverTile({ county, currentLayer, isClicked = fa
             {county.medicaid_enrollment_rate && (
               <div className="flex justify-between">
                 <span className="text-gray-600">Medicaid:</span>
-                <span className="font-medium">{county.medicaid_enrollment_rate.toFixed(1)}%</span>
+                <span className="font-medium">{formatMedicaidRate(county.medicaid_enrollment_rate)}</span>
               </div>
             )}
             {county.svi_data?.svi_overall_percentile && (

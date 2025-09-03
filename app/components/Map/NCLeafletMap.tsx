@@ -3,7 +3,6 @@
 import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { County, HealthcareMetrics } from '../../types/healthcare';
 import { useHealthcareStore } from '../../utils/store';
-import MapLegend from './MapLegend';
 import UnifiedCountyTile from './UnifiedCountyTile';
 import MapControls from './MapControls';
 import { DataLayer } from '../DataLayers/DataLayerSelector';
@@ -122,6 +121,12 @@ export default function NCLeafletMap({
         const leaflet = await import('leaflet');
         L = leaflet.default;
 
+        // Ensure container is ready before proceeding
+        if (!mapContainer.current) {
+          console.warn('Map container ref not ready');
+          return;
+        }
+
         // Create custom hospital icons
         if (L?.divIcon) {
           // Small hospital icon (< 50 beds)
@@ -235,6 +240,89 @@ export default function NCLeafletMap({
 
     if (healthData) {
       switch (currentLayer) {
+        // Medicaid layers
+        case 'medicaid_total':
+          fillColor = getMedicaidColor(healthData.medicaid_enrollment_rate);
+          fillOpacity = 0.8;
+          break;
+        case 'medicaid_expansion':
+          fillColor = getMedicaidColor(healthData.medicaid_expansion_enrollment);
+          fillOpacity = 0.8;
+          break;
+        case 'medicaid_aged':
+        case 'medicaid_disabled':
+        case 'medicaid_blind':
+        case 'medicaid_children':
+        case 'medicaid_pregnant':
+          fillColor = getMedicaidColor(healthData.medicaid_enrollment_rate);
+          fillOpacity = 0.8;
+          break;
+        
+        // SVI layers
+        case 'svi_overall':
+          fillColor = getSVIColor(healthData.svi_data?.svi_overall_percentile);
+          fillOpacity = 0.8;
+          break;
+        case 'svi_socioeconomic':
+          fillColor = getSVIColor(healthData.svi_data?.socioeconomic_percentile);
+          fillOpacity = 0.8;
+          break;
+        case 'svi_household':
+          fillColor = getSVIColor(healthData.svi_data?.household_composition_percentile);
+          fillOpacity = 0.8;
+          break;
+        case 'svi_minority':
+          fillColor = getSVIColor(healthData.svi_data?.racial_minority_percentile);
+          fillOpacity = 0.8;
+          break;
+        case 'svi_housing':
+          fillColor = getSVIColor(healthData.svi_data?.housing_transport_percentile);
+          fillOpacity = 0.8;
+          break;
+        case 'svi_poverty':
+          fillColor = getPercentageColor(healthData.svi_data?.poverty_150_pct);
+          fillOpacity = 0.8;
+          break;
+        case 'svi_no_insurance':
+          fillColor = getPercentageColor(healthData.svi_data?.no_insurance_pct);
+          fillOpacity = 0.8;
+          break;
+        case 'svi_unemployment':
+          fillColor = getPercentageColor(healthData.svi_data?.unemployment_pct);
+          fillOpacity = 0.8;
+          break;
+        case 'svi_disability':
+          fillColor = getPercentageColor(healthData.svi_data?.disability_pct);
+          fillOpacity = 0.8;
+          break;
+        
+        // HCVI layers
+        case 'hcvi_composite':
+          fillColor = getHCVIColor(healthData.hcvi_composite);
+          fillOpacity = 0.8;
+          break;
+        case 'healthcare_access':
+          fillColor = getScoreColor(healthData.healthcare_access_score);
+          fillOpacity = 0.8;
+          break;
+        case 'policy_risk':
+          fillColor = getScoreColor(healthData.policy_risk_score);
+          fillOpacity = 0.8;
+          break;
+        case 'economic_vulnerability':
+          fillColor = getScoreColor(healthData.economic_vulnerability_score);
+          fillOpacity = 0.8;
+          break;
+        
+        // Hospital layers
+        case 'hospitals':
+        case 'hospital_ownership':
+        case 'private_equity':
+          fillColor = '#f9fafb';
+          fillOpacity = 0.2;
+          break;
+        
+        // Legacy layers
         case 'medicaid':
           fillColor = getMedicaidColor(healthData.medicaid_enrollment_rate);
           fillOpacity = medicaidEnabled ? 0.9 : 0.7;
@@ -243,13 +331,9 @@ export default function NCLeafletMap({
           fillColor = getSVIColor(healthData.svi_data?.svi_overall_percentile);
           fillOpacity = 0.8;
           break;
-        case 'hospitals':
-          // For hospital layer, use subtle background with very low opacity
-          fillColor = '#f9fafb';
-          fillOpacity = 0.2;
-          break;
+        
         default:
-          fillColor = getMedicaidColor(healthData.medicaid_enrollment_rate);
+          fillColor = getHCVIColor(healthData.hcvi_composite);
           fillOpacity = 0.8;
       }
     }
@@ -348,12 +432,19 @@ export default function NCLeafletMap({
     geoJsonLayerRef.current = L!.geoJSON(countyGeoData, {
       style: (feature) => feature ? getCountyStyle(feature) : {},
       onEachFeature: (feature: GeoJSON.Feature, layer: import('leaflet').Layer) => {
-        // Only add hover and click handlers if not on hospital layer
-        if (currentLayer !== 'hospitals') {
+        // Add hover and click handlers for all layers except hospital layers where we want to prioritize markers
+        const isHospitalLayer = currentLayer === 'hospitals' || currentLayer === 'hospital_ownership' || currentLayer === 'private_equity';
+        if (!isHospitalLayer) {
           layer.on({
             mouseover: (e: import('leaflet').LeafletMouseEvent) => handleCountyHover(e, feature),
             mouseout: (e: import('leaflet').LeafletMouseEvent) => handleCountyMouseOut(e),
             click: (e: import('leaflet').LeafletMouseEvent) => handleCountyClick(e, feature)
+          });
+        } else {
+          // For hospital layers, still allow hover but with lower priority
+          layer.on({
+            mouseover: (e: import('leaflet').LeafletMouseEvent) => handleCountyHover(e, feature),
+            mouseout: (e: import('leaflet').LeafletMouseEvent) => handleCountyMouseOut(e)
           });
         }
       }
@@ -435,6 +526,12 @@ export default function NCLeafletMap({
     if (!mapContainer.current || !L || !countyGeoData) return;
 
     try {
+      // Ensure the container is properly mounted in DOM before creating map
+      if (!mapContainer.current.isConnected) {
+        console.warn('Map container not properly connected to DOM');
+        return;
+      }
+
       // Create map with NC-focused settings
       mapRef.current = L!.map(mapContainer.current, {
         center: [35.7596, -79.0193], // North Carolina center
@@ -444,6 +541,7 @@ export default function NCLeafletMap({
         zoomControl: false, // We'll add custom zoom controls
         scrollWheelZoom: true,
         attributionControl: true,
+        preferCanvas: true, // Use Canvas for better performance and stability
         maxBounds: [
           [28.0, -95.0], // Southwest corner (much wider for background)
           [42.0, -65.0]  // Northeast corner (much wider for background)
@@ -451,7 +549,7 @@ export default function NCLeafletMap({
         maxBoundsViscosity: 0.3 // Allow more movement for background visibility
       });
 
-      // Add OpenStreetMap tiles with reduced opacity
+      // Add OpenStreetMap tiles with light theme
       L!.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
         maxZoom: 12,
@@ -507,6 +605,33 @@ export default function NCLeafletMap({
     if (percentile >= 0.50) return '#f97316'; // Moderate-High
     if (percentile >= 0.25) return '#fbbf24'; // Moderate-Low
     return '#22c55e'; // Low Vulnerability
+  };
+
+  const getPercentageColor = (percentage?: number | null) => {
+    if (!percentage) return '#e5e7eb';
+    if (percentage >= 30) return '#dc2626'; // Very High
+    if (percentage >= 20) return '#f97316'; // High
+    if (percentage >= 10) return '#fbbf24'; // Moderate
+    if (percentage >= 5) return '#84cc16'; // Low
+    return '#22c55e'; // Very Low
+  };
+
+  const getHCVIColor = (score?: number | null) => {
+    if (!score) return '#e5e7eb';
+    if (score >= 7.5) return '#dc2626'; // Extreme vulnerability
+    if (score >= 5.5) return '#f97316'; // High vulnerability  
+    if (score >= 3.5) return '#fbbf24'; // Moderate vulnerability
+    if (score >= 2.0) return '#84cc16'; // Low-moderate vulnerability
+    return '#22c55e'; // Low vulnerability
+  };
+
+  const getScoreColor = (score?: number | null) => {
+    if (!score) return '#e5e7eb';
+    if (score >= 8) return '#dc2626'; // Very High Risk
+    if (score >= 6) return '#f97316'; // High Risk
+    if (score >= 4) return '#fbbf24'; // Moderate Risk
+    if (score >= 2) return '#84cc16'; // Low Risk
+    return '#22c55e'; // Very Low Risk
   };
 
 
@@ -612,11 +737,9 @@ export default function NCLeafletMap({
         />
       )}
 
-      {/* Map Legend */}
-      {mapLoaded && <MapLegend selectedMetric={currentLayer} />}
 
       {/* Hover Info - Unified County Tile (follows cursor) */}
-      {!selectedCounty && !selectedHospital && currentLayer !== 'hospitals' && (
+      {!selectedCounty && !selectedHospital && hoveredCountyData && (
         <UnifiedCountyTile
           county={hoveredCountyData}
           currentLayer={currentLayer}

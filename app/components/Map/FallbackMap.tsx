@@ -2,7 +2,7 @@
 
 import { County, HealthcareMetrics } from '../../types/healthcare';
 import { getLayerColor, getLayerValue } from '../../utils/dataLayers';
-import MapLegend from './MapLegend';
+import DescriptionLegendTile from './DescriptionLegendTile';
 import CountyPopup from './CountyPopup';
 import { DataLayer } from '../DataLayers/DataLayerSelector';
 
@@ -40,7 +40,7 @@ export default function FallbackMap({
   ];
 
   return (
-    <div className="h-full relative bg-gray-50">
+    <div className="h-full relative bg-gray-50 pl-80">
       {/* SVG Map */}
       <svg 
         width="100%" 
@@ -107,8 +107,8 @@ export default function FallbackMap({
         ))}
       </svg>
 
-      {/* Legend */}
-      <MapLegend selectedMetric={selectedMetric} />
+      {/* Description & Legend Combined Tile */}
+      <DescriptionLegendTile currentLayer={selectedMetric} />
 
       {/* County Detail Popup */}
       {selectedCounty && (

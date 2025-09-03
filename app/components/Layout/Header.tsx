@@ -3,14 +3,13 @@
 import React from 'react';
 
 interface HeaderProps {
-  activeTab: 'home' | 'index' | 'data' | 'project';
-  onTabChange: (tab: 'home' | 'index' | 'data' | 'project') => void;
+  activeTab: 'index' | 'data' | 'project';
+  onTabChange: (tab: 'index' | 'data' | 'project') => void;
 }
 
 export default function Header({ activeTab, onTabChange }: HeaderProps) {
   const tabs = [
-    { id: 'home', label: 'Home' },
-    { id: 'index', label: 'Index' },
+    { id: 'index', label: 'Map' },
     { id: 'data', label: 'Data' },
     { id: 'project', label: 'Project' }
   ] as const;

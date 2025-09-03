@@ -3,6 +3,8 @@
 import React from 'react';
 import { HealthcareMetrics } from '../../types/healthcare';
 import { DataLayer } from '../DataLayers/DataLayerSelector';
+import { formatMedicaidRate } from '../../utils/medicaidHelpers';
+import { useCountyClassifications } from '../../hooks/useCountyClassifications';
 
 interface FloatingOverviewTileProps {
   county: HealthcareMetrics | null;
@@ -11,18 +13,20 @@ interface FloatingOverviewTileProps {
   isFixed?: boolean;
 }
 
-export default function FloatingOverviewTile({ county, currentLayer, position, isFixed = false }: FloatingOverviewTileProps) {
+export default function FloatingOverviewTile({
+ county, currentLayer, position, isFixed = false }: FloatingOverviewTileProps) {
+  const { getClassification } = useCountyClassifications();
   if (!county) return null;
 
   const getLayerData = () => {
     switch (currentLayer) {
       case 'medicaid':
         return {
-          primaryValue: county.medicaid_enrollment_rate ? `${county.medicaid_enrollment_rate.toFixed(1)}%` : 'N/A',
+          primaryValue: formatMedicaidRate(county.medicaid_enrollment_rate),
           primaryLabel: 'Medicaid Enrollment',
           secondaryValue: county.population_2020 ? county.population_2020.toLocaleString() : 'N/A',
           secondaryLabel: 'Population',
-          tertiaryValue: county.is_rural ? 'Rural' : 'Urban',
+          tertiaryValue: getClassification(county.fips_code),
           tertiaryLabel: 'Classification',
           color: 'blue'
         };
@@ -32,17 +36,17 @@ export default function FloatingOverviewTile({ county, currentLayer, position, i
           primaryLabel: 'SVI Percentile',
           secondaryValue: county.svi_data?.socioeconomic_percentile ? `${county.svi_data.socioeconomic_percentile.toFixed(0)}th` : 'N/A',
           secondaryLabel: 'Socioeconomic',
-          tertiaryValue: county.is_rural ? 'Rural' : 'Urban',
+          tertiaryValue: getClassification(county.fips_code),
           tertiaryLabel: 'Type',
           color: 'amber'
         };
       case 'hospitals':
         return {
-          primaryValue: county.is_rural ? 'Rural' : 'Urban',
+          primaryValue: getClassification(county.fips_code),
           primaryLabel: 'Classification',
           secondaryValue: county.population_2020 ? county.population_2020.toLocaleString() : 'N/A',
           secondaryLabel: 'Population',
-          tertiaryValue: county.medicaid_enrollment_rate ? `${county.medicaid_enrollment_rate.toFixed(1)}%` : 'N/A',
+          tertiaryValue: formatMedicaidRate(county.medicaid_enrollment_rate),
           tertiaryLabel: 'Medicaid Rate',
           color: 'green'
         };

@@ -26,8 +26,8 @@ export default function MainContent({ children, onSidebarToggle }: MainContentPr
       )}
 
 
-      {/* Main content area - Optimized for map display */}
-      <main className="flex-1 relative w-full overflow-hidden bg-slate-100">
+      {/* Main content area - Optimized for map display with sidebar layout */}
+      <main className="flex-1 relative w-full overflow-hidden bg-gray-50">
         <div className="h-full w-full content-scroll">
           {children}
         </div>
