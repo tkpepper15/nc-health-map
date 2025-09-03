@@ -296,12 +296,12 @@ export default function ClientApp() {
                 {/* Prototype Notice */}
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-8">
                   <div className="flex items-center">
-                    <div className="flex-shrink-0">
+                    <div className="flex-shrink-0 mr-4">
                       <svg className="h-5 w-5 text-amber-600" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                       </svg>
                     </div>
-                    <div className="ml-3">
+                    <div>
                       <h3 className="text-sm font-medium text-amber-800">Development Prototype</h3>
                       <p className="text-sm text-amber-700 mt-1">
                         This is an active development prototype. Data sources are being integrated and refined. 
@@ -311,71 +311,55 @@ export default function ClientApp() {
                   </div>
                 </div>
                 
-                <div className="space-y-8">
-                  <div className="prose max-w-none">
-                    <p className="text-lg text-gray-700 leading-relaxed">
-                      This interactive mapping application visualizes the complex healthcare landscape across North Carolina&apos;s 100 counties, 
-                      with particular focus on the impacts of federal healthcare policy changes and broader healthcare challenges.
-                    </p>
-                  </div>
-                  
+                <div className="space-y-12">
                   <div className="bg-gray-50 p-8 rounded-xl">
                     <h2 className="text-2xl font-semibold text-gray-900 mb-6">Project Overview</h2>
                     <div className="space-y-6">
-                      <p className="text-gray-700 leading-relaxed">
+                      <p className="text-gray-700 leading-relaxed text-lg">
                         The North Carolina Healthcare Vulnerability Index (HCVI) combines multiple data sources to provide 
                         a comprehensive view of healthcare access, policy risks, and economic vulnerability across the state. 
                         The application reveals significant disparities in healthcare infrastructure, with rural communities 
                         bearing disproportionate burdens while urban areas maintain relative advantages.
                       </p>
                       
-                      <div className="bg-gray-50 p-6 rounded-lg mt-6 text-center">
-                        <p className="text-gray-700 mb-4">
+                      <div className="bg-white p-8 rounded-lg border border-gray-200 mt-8">
+                        <p className="text-gray-700 mb-6 text-center text-lg">
                           This application was developed to provide transparent, data-driven insights into North Carolina's healthcare landscape.
                         </p>
-                        <div className="flex justify-center items-center">
-                          <div>
-                            <p className="text-sm text-gray-600 mb-2">Created by:</p>
-                            <div className="space-x-6">
-                              <a href="https://www.linkedin.com/in/sumedh-kotrannavar-3b3b4a23b/" 
-                                 className="text-blue-600 hover:text-blue-800 font-medium text-sm"
-                                 target="_blank" rel="noopener noreferrer">
-                                Sumedh Kotrannavar
-                              </a>
-                              <span className="text-gray-400">&</span>
-                              <a href="https://www.linkedin.com/in/tejjas-kaul-36091a22b/" 
-                                 className="text-blue-600 hover:text-blue-800 font-medium text-sm"
-                                 target="_blank" rel="noopener noreferrer">
-                                Tejjas Kaul
-                              </a>
-                            </div>
-                          </div>
+                        <div className="text-center">
+
                         </div>
                       </div>
                     </div>
                   </div>
                   
                   <div className="bg-blue-50 p-8 rounded-xl">
-                    <h2 className="text-2xl font-semibold text-gray-900 mb-6">Creators & Contributors</h2>
-                    <div className="grid md:grid-cols-2 gap-6 mb-6">
-                      <div className="text-center p-4 bg-white rounded-lg">
-                        <h3 className="text-lg font-semibold text-gray-900">Tejjas Kaul</h3>
-                        <p className="text-gray-600 mt-1">Lead Developer & Data Analyst</p>
+                    <h2 className="text-2xl font-semibold text-gray-900 mb-8">Creators & Contributors</h2>
+                    <div className="grid md:grid-cols-2 gap-6 mb-8">
+                      <div className="text-center p-6 bg-white rounded-lg border border-blue-100">
+                        <a href="https://www.linkedin.com/in/tejjas-kaul-36091a22b/" 
+                           className="text-lg font-semibold text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                           target="_blank" rel="noopener noreferrer">
+                          Tejjas Kaul
+                        </a>
                       </div>
-                      <div className="text-center p-4 bg-white rounded-lg">
-                        <h3 className="text-lg font-semibold text-gray-900">Sumedh Kotrannavar</h3>
-                        <p className="text-gray-600 mt-1">Co-Developer & Research Contributor</p>
+                      <div className="text-center p-6 bg-white rounded-lg border border-blue-100">
+                        <a href="https://www.linkedin.com/in/sumedh-kotrannavar-3b3b4a23b/" 
+                           className="text-lg font-semibold text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                           target="_blank" rel="noopener noreferrer">
+                          Sumedh Kotrannavar
+                        </a>
                       </div>
                     </div>
                     
-                    <div className="text-center space-y-4">
-                      <p className="text-gray-700 leading-relaxed">
+                    <div className="text-center space-y-6">
+                      <p className="text-gray-700 leading-relaxed text-lg">
                         This project was developed to inform evidence-based policy decisions and resource allocation 
                         to protect vulnerable populations and maintain healthcare access across all North Carolina counties.
                       </p>
                       
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                        <h4 className="text-lg font-semibold text-blue-900 mb-4">Complete Data Sources & Links</h4>
+                      <div className="bg-white border border-blue-200 rounded-lg p-8 mt-8">
+                        <h4 className="text-xl font-semibold text-blue-900 mb-6 text-center">Complete Data Sources & Links</h4>
                         
                         <div className="grid md:grid-cols-2 gap-6">
                           <div className="space-y-4">
@@ -437,8 +421,8 @@ export default function ClientApp() {
                           </div>
                         </div>
                         
-                        <div className="mt-6 pt-4 border-t border-blue-200">
-                          <p className="text-xs text-blue-700">
+                        <div className="mt-8 pt-6 border-t border-blue-200">
+                          <p className="text-sm text-blue-700 text-center leading-relaxed">
                             <strong>Data Processing:</strong> All datasets processed and stored in Supabase database. Exactly 100 NC counties validated (FIPS 37001-37199).
                             Statistical formulas available in the Data page. No synthetic data used.
                           </p>
