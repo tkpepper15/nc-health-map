@@ -284,7 +284,7 @@ export function useOptimizedHealthcareData() {
 
   // Function to get aggregated summary for map display - memoized
   const getMapData = useMemo(() => {
-    return data.healthcareData.map(county => ({
+    return (data.healthcareData || []).map(county => ({
       fips: county.fips_code,
       name: county.countyName,
       hcvi: county.hcvi_composite,
@@ -296,7 +296,7 @@ export function useOptimizedHealthcareData() {
   // Create lookup maps for O(1) performance
   const healthcareDataMap = useMemo(() => {
     const map = new Map<string, HealthcareMetrics>();
-    data.healthcareData.forEach(item => {
+    (data.healthcareData || []).forEach(item => {
       map.set(item.fips_code, item);
     });
     return map;
@@ -304,7 +304,7 @@ export function useOptimizedHealthcareData() {
 
   const countiesMap = useMemo(() => {
     const map = new Map<string, County>();
-    data.counties.forEach(county => {
+    (data.counties || []).forEach(county => {
       map.set(county.fips, county);
     });
     return map;

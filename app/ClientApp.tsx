@@ -106,11 +106,11 @@ export default function ClientApp() {
   }, []);
 
   // Simple computed values
-  const selectedCountyData = selectedCounty ? counties.find(c => c.fips === selectedCounty) || null : null;
+  const selectedCountyData = selectedCounty ? (counties || []).find(c => c.fips === selectedCounty) || null : null;
   const medicaidEnabled = currentLayer.includes('medicaid');
   
   // Simple data summary calculations using county classifications
-  const validMedicaidCounties = healthcareData.filter(d => 
+  const validMedicaidCounties = (healthcareData || []).filter(d => 
     d.medicaid_enrollment_rate !== null && 
     d.medicaid_enrollment_rate !== undefined &&
     d.fips_code && 
@@ -127,7 +127,7 @@ export default function ClientApp() {
       tourism: 0
     };
     
-    healthcareData.forEach(d => {
+    (healthcareData || []).forEach(d => {
       const classification = countyClassifications[d.fips_code]?.classification;
       if (classification && classificationCounts.hasOwnProperty(classification)) {
         classificationCounts[classification as keyof typeof classificationCounts]++;
@@ -135,7 +135,7 @@ export default function ClientApp() {
     });
     
     // Filter to ensure exactly 100 valid NC counties
-    const validHealthcareData = healthcareData.filter(d => 
+    const validHealthcareData = (healthcareData || []).filter(d => 
       d.fips_code && 
       d.fips_code !== '37999' && 
       /^37[0-1][0-9][13579]$/.test(d.fips_code) && 
@@ -166,7 +166,7 @@ export default function ClientApp() {
           <h2 className="text-xl font-semibold text-gray-700 mb-2">Loading Healthcare Data</h2>
           <p className="text-gray-500">Attempting to connect to Supabase...</p>
           <div className="mt-4 text-xs text-gray-400">
-            <p>Counties: {counties.length} | Healthcare Data: {healthcareData.length}</p>
+            <p>Counties: {counties?.length || 0} | Healthcare Data: {healthcareData?.length || 0}</p>
             <p>Connected: {isBackendConnected ? '✅ Supabase' : '📂 Local'}</p>
             {error && <p className="text-red-500 mt-2">Error: {error}</p>}
           </div>
