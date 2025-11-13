@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     # External APIs
     CENSUS_API_KEY: Optional[str] = None
     MAPBOX_ACCESS_TOKEN: Optional[str] = None
+    NEWS_API_KEY: str
+    HUGGINGFACE_TOKEN: Optional[str] = None
     
     # Logging
     LOG_LEVEL: str = "INFO"
@@ -49,6 +51,8 @@ class Settings(BaseSettings):
         env_file = ".env"
         case_sensitive = True
         extra = "ignore"  # Ignore extra environment variables
+
+    # (No domain whitelist configured) 
 
 
 # Global settings instance

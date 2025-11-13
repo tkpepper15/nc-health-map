@@ -29,6 +29,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: nc-healthcare-api
+    env_file:
+      - ./backend/.env
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/nc_healthcare
       - DATABASE_URL_SYNC=postgresql://postgres:password@postgres:5432/nc_healthcare

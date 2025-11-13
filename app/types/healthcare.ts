@@ -120,18 +120,47 @@ export interface HealthcareMetrics {
 }
 
 export interface Hospital {
-  id: string;
-  name: string;
-  countyId: string;
-  coordinates: [number, number]; // [longitude, latitude]
-  type: 'rural' | 'urban' | 'critical_access' | 'specialty';
-  bedCount: number;
-  financialHealth: {
-    operatingMargin: number;
-    closureRisk: 'low' | 'moderate' | 'high' | 'critical';
-    privateEquityOwned: boolean;
-  };
-  services: string[];
+  id: string | number;
+  facility_name: string;
+  alt_name?: string;
+  licensee?: string;
+  license_number?: string;
+  facility_type?: string;
+  service_type?: string;
+  
+  // Location data
+  county?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  address?: string;
+  phone?: string;
+  latitude: number;
+  longitude: number;
+  
+  // Capacity data
+  general_beds?: number;
+  rehab_beds?: number;
+  psych_beds?: number;
+  substance_abuse_beds?: number;
+  nursing_facility_beds?: number;
+  total_beds?: number;
+  
+  // Operating room data
+  cardiac_surgery_rooms?: number;
+  cesarean_rooms?: number;
+  ambulatory_surgery_rooms?: number;
+  shared_rooms?: number;
+  endoscopy_rooms?: number;
+  other_surgery_rooms?: number;
+  total_surgery_rooms?: number;
+  
+  // Classification flags
+  is_major_hospital?: boolean;
+  is_specialty?: boolean;
+  is_emergency_dept?: boolean;
+  is_ltac?: boolean;
+  is_rehab?: boolean;
 }
 
 export interface PolicyImpact {

@@ -7,6 +7,7 @@ import UnifiedCountyTile from './UnifiedCountyTile';
 import MapControls from './MapControls';
 import { DataLayer } from '../DataLayers/DataLayerSelector';
 import styles from './NCMap.module.css';
+import ConnectedTile from './ConnectedTile';
 
 // Dynamic import for Leaflet to avoid SSR issues
 let L: typeof import('leaflet') | null = null;
@@ -407,12 +408,14 @@ export default function NCLeafletMap({
     const county = countyMap.get(fullFips);
     
     if (county) {
-      // Capture click position for fixed tile placement
+      // Capture click position in map coordinates
       const rect = mapContainer.current?.getBoundingClientRect();
       if (rect && e.originalEvent) {
+        const x = e.originalEvent.clientX - rect.left;
+        const y = e.originalEvent.clientY - rect.top;
         setClickPosition({
-          x: e.originalEvent.clientX,
-          y: e.originalEvent.clientY
+          x,
+          y
         });
       }
       onCountyClick(county);
@@ -450,12 +453,11 @@ export default function NCLeafletMap({
       }
     }).addTo(mapRef.current);
 
-    // Fit map to NC county bounds with proper padding
+    // Fit map to NC county bounds with proper padding so we leave
+    // a comfortable blank area in the top-left and bottom for UI tiles.
     const bounds = geoJsonLayerRef.current.getBounds();
-    mapRef.current.fitBounds(bounds, {
-      padding: [20, 20],
-      maxZoom: 10 // Prevent zooming too close when fitting bounds
-    });
+    mapRef.current.fitBounds(bounds, { padding: [20, 20], maxZoom: 10 });
+    
     
     // Set NC-specific bounds after fitting
     mapRef.current.setMaxBounds([
@@ -534,8 +536,8 @@ export default function NCLeafletMap({
 
       // Create map with NC-focused settings
       mapRef.current = L!.map(mapContainer.current, {
-        center: [35.7596, -79.0193], // North Carolina center
-        zoom: 7,
+        center: [35.3, -78.5],   // moved SE (down + right)
+        zoom: 7.4,               // slightly zoomed in
         minZoom: 6,
         maxZoom: 12,
         zoomControl: false, // We'll add custom zoom controls
@@ -748,17 +750,16 @@ export default function NCLeafletMap({
         />
       )}
       
-      {/* Selected County Tile (fixed position, pinned) */}
-      {selectedCounty && selectedCountyData && !selectedHospital && (
-        <UnifiedCountyTile
+      {/* Selected County Tile with connector (floating) */}
+      {selectedCounty && selectedCountyData && clickPosition && (
+        <ConnectedTile
           county={selectedCountyData}
           currentLayer={currentLayer}
-          position={clickPosition}
-          isFixed={true}
           onClose={() => {
             onCountyClick(null);
             setClickPosition(null);
           }}
+          sourcePoint={clickPosition}
         />
       )}
       

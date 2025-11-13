@@ -6,9 +6,9 @@ import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 export type DataLayer = 
   // Medicaid Categories
   | 'medicaid_total' | 'medicaid_aged' | 'medicaid_disabled' | 'medicaid_blind' 
-  | 'medicaid_expansion' | 'medicaid_children' | 'medicaid_pregnant' 
+  | 'medicaid_expansion' | 'medicaid_children' | 'medicaid_pregnant' | 'medicaid'
   // SVI Themes  
-  | 'svi_overall' | 'svi_socioeconomic' | 'svi_household' | 'svi_minority' | 'svi_housing'
+  | 'svi_overall' | 'svi_socioeconomic' | 'svi_household' | 'svi_minority' | 'svi_housing' | 'svi'
   // SVI Individual Metrics
   | 'svi_poverty' | 'svi_unemployment' | 'svi_no_insurance' | 'svi_disability'
   // Hospitals & Healthcare Access

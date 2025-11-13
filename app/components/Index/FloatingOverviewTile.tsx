@@ -78,8 +78,9 @@ export default function FloatingOverviewTile({
     gray: 'text-gray-700'
   };
 
+  // When pinned (isFixed) show the overview tile in the top-left corner to match other floating tiles
   const positioning = isFixed 
-    ? 'top-6 left-1/2 transform -translate-x-1/2'
+    ? 'top-6 left-6'
     : position 
       ? `fixed`
       : 'hidden';
@@ -93,7 +94,7 @@ export default function FloatingOverviewTile({
 
   return (
     <div 
-      className={`floating-tile w-80 bg-white rounded-xl shadow-xl border border-gray-200 p-4 ${positioning}`}
+      className={`floating-tile w-96 bg-white rounded-xl shadow-xl border border-gray-200 p-4 ${positioning}`}
       style={style}
     >
       <div className="text-center">
@@ -102,12 +103,26 @@ export default function FloatingOverviewTile({
         </h3>
         
         <div className={`p-3 rounded-lg border-2 ${colorClasses[data.color]} mb-3`}>
-          <div className={`text-2xl font-bold mb-1 ${primaryColorClasses[data.color]}`}>
-            {data.primaryValue}
-          </div>
-          <div className="text-sm text-gray-600">
-            {data.primaryLabel}
-          </div>
+          {/* Render horizontally when the tile is pinned to the top-left (isFixed) */}
+          {isFixed ? (
+            <div className="flex items-center justify-between">
+              <div className={`text-2xl font-bold ${primaryColorClasses[data.color]}`}>
+                {data.primaryValue}
+              </div>
+              <div className="text-sm text-gray-600 text-right max-w-[60%]">
+                {data.primaryLabel}
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className={`text-2xl font-bold mb-1 ${primaryColorClasses[data.color]}`}>
+                {data.primaryValue}
+              </div>
+              <div className="text-sm text-gray-600">
+                {data.primaryLabel}
+              </div>
+            </>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-3">

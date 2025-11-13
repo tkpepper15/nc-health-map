@@ -1,0 +1,97 @@
+
+> nextjs@0.1.0 dev
+> next dev
+
+ ⚠ Warning: Found multiple lockfiles. Selecting /Users/eshaanraj/Documents/projects/nc-health-map/package-lock.json.
+   Consider removing the lockfiles at:
+   * /Users/eshaanraj/Documents/projects/nc-health-map/nc-health-map/package-lock.json
+
+ ⚠ Port 3000 is in use by process 52075, using available port 3003 instead.
+   ▲ Next.js 15.4.1
+   - Local:        http://localhost:3003
+   - Network:      http://152.23.155.190:3003
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1690ms
+ ○ Compiling / ...
+ ✓ Compiled / in 2.5s (691 modules)
+ GET / 200 in 3233ms
+ ○ Compiling /api/hospitals-data ...
+ ✓ Compiled /api/hospitals-data in 908ms (730 modules)
+ GET /favicon.ico 200 in 1071ms
+ GET / 200 in 208ms
+ GET /api/healthcare-data?aggregated=true&limit=1 200 in 2178ms
+ GET /api/healthcare-data 200 in 2028ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 2049ms
+ GET /api/healthcare-data 200 in 98ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 151ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 120ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 112ms
+ ✓ Compiled /_not-found in 97ms (731 modules)
+ POST /api/chat 404 in 197ms
+ GET / 200 in 86ms
+ ⚠ Cross origin request detected from 152.23.155.190 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ GET /favicon.ico 200 in 77ms
+ GET /api/healthcare-data?aggregated=true&limit=1 200 in 299ms
+ GET /api/healthcare-data 200 in 214ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 285ms
+ GET /api/healthcare-data 200 in 100ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 97ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 86ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 97ms
+ ✓ Compiled in 245ms (282 modules)
+ GET / 200 in 100ms
+ ✓ Compiled in 153ms (282 modules)
+ GET / 200 in 12ms
+ GET / 200 in 65ms
+ GET /api/healthcare-data?aggregated=true&limit=1 200 in 354ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 318ms
+ GET /api/healthcare-data 200 in 325ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 121ms
+ GET /api/healthcare-data 200 in 134ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 89ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 120ms
+ GET / 200 in 177ms
+ GET / 200 in 28ms
+ GET / 200 in 67ms
+ GET /favicon.ico 200 in 45ms
+ GET /api/healthcare-data 200 in 1344ms
+ GET /api/healthcare-data?aggregated=true&limit=1 200 in 1410ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 1446ms
+ GET /api/healthcare-data 200 in 135ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 128ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 131ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 133ms
+ GET / 200 in 71ms
+ GET /favicon.ico 200 in 7ms
+ GET /api/healthcare-data 200 in 1111ms
+ GET /api/healthcare-data?aggregated=true&limit=1 200 in 1149ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 1190ms
+ GET /api/healthcare-data 200 in 88ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 226ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 151ms
+✅ Loaded 163 hospital facilities from database
+ GET /api/hospitals-data 200 in 130ms
+ GET / 200 in 54ms
+ ○ Compiling /_error ...

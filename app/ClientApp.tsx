@@ -13,6 +13,9 @@ const NCLeafletMap = dynamic(() => import('./components/Map/NCLeafletMap'), {
 const DescriptionLegendTile = dynamic(() => import('./components/Map/DescriptionLegendTile'), {
   ssr: false
 });
+const Sidebar = dynamic(() => import('./components/Sidebar/Sidebar'), {
+  ssr: false
+});
 import DataLayerSelector from './components/DataLayers/DataLayerSelector';
 import DataDownloadButton from './components/Index/DataDownloadButton';
 import DataSourceTransparency from './components/Index/DataSourceTransparency';
@@ -20,17 +23,11 @@ import { DataLayer } from './components/DataLayers/DataLayerSelector';
 import { useHealthcareStore } from './utils/store';
 import { useOptimizedHealthcareData } from './hooks/useOptimizedHealthcareData';
 import { useHospitalData } from './hooks/useHospitalData';
-import { County } from './types/healthcare';
+import { County, Hospital } from './types/healthcare';
 
 export default function ClientApp() {
   const [activeTab, setActiveTab] = useState<'index' | 'data' | 'project'>('index');
-  const [selectedHospital, setSelectedHospital] = useState<{
-    id: string | number;
-    facility_name: string;
-    latitude: number;
-    longitude: number;
-    [key: string]: unknown;
-  } | null>(null);
+  const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
   
   // Load county classifications data
   const [countyClassifications, setCountyClassifications] = useState<Record<string, {
@@ -92,7 +89,7 @@ export default function ClientApp() {
     }
   }, [setSelectedCounty]);
 
-  const handleHospitalClick = useCallback((hospital: { id: string | number; facility_name: string; latitude: number; longitude: number; [key: string]: unknown } | null) => {
+  const handleHospitalClick = useCallback((hospital: Hospital | null) => {
     if (hospital) {
       setSelectedHospital(hospital);
       setSelectedCounty(null);
@@ -105,8 +102,11 @@ export default function ClientApp() {
     // Handle clicks on the map container
   }, []);
 
-  // Simple computed values
-  const selectedCountyData = selectedCounty ? (counties || []).find(c => c.fips === selectedCounty) || null : null;
+  // Get County object from FIPS
+  const selectedCountyData = useMemo(() => {
+    if (!selectedCounty || !counties) return null;
+    return counties.find(county => county.fips === selectedCounty) || null;
+  }, [selectedCounty, counties]);
   const medicaidEnabled = currentLayer.includes('medicaid');
   
   // Simple data summary calculations using county classifications
@@ -194,11 +194,14 @@ export default function ClientApp() {
       
       <div className="flex-1 flex">
         <MainContent>
+          {/* Sidebar */}
+          <Sidebar />
+          
           {activeTab === 'index' && (
-            <div className="h-full w-full relative">
-              {/* Full Width Map */}
+            <div className="h-full relative flex">
+              {/* Map Area */}
               <div 
-                className="w-full h-full relative overflow-hidden"
+                className="flex-1 h-full relative overflow-hidden pr-96"
                 onClick={handleMapClick}
               >
                 <NCLeafletMap
@@ -214,7 +217,7 @@ export default function ClientApp() {
               </div>
 
               {/* Floating Tiles Container */}
-              <div className="absolute top-6 left-6 w-80 pointer-events-none z-10 space-y-4">
+              <div className="absolute top-6 left-6 w-96 pointer-events-none z-10 space-y-4">
                 {/* Legend Tile */}
                 <div className="bg-white rounded-xl shadow-lg border border-gray-200 pointer-events-auto">
                   <DescriptionLegendTile currentLayer={currentLayer} />

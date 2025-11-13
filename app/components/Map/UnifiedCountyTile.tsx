@@ -61,6 +61,7 @@ export default function UnifiedCountyTile({
 }: UnifiedCountyTileProps) {
   const { getClassification, getClassificationColor } = useCountyClassifications();
   
+  // If neither county nor hospital is selected, don't render a floating tile here
   if (!county && !hospital) return null;
 
   const getLayerData = () => {
@@ -384,6 +385,9 @@ export default function UnifiedCountyTile({
     gray: 'text-gray-700'
   };
 
+  // Show a horizontal layout for the HCVI composite tile (value + label side-by-side)
+  const isCompositeTile = !hospital && currentLayer === 'hcvi_composite';
+
   // Position logic - hover follows cursor, fixed stays in place
   const getPositionStyle = () => {
     if (isFixed) {
@@ -428,7 +432,7 @@ export default function UnifiedCountyTile({
               </>
             ) : (
               <>
-                FIPS: {county?.fips_code} • {getClassification(county.fips_code)}
+                FIPS: {county?.fips_code} • {county?.fips_code ? getClassification(county.fips_code) : 'N/A'}
               </>
             )}
           </p>
@@ -446,12 +450,27 @@ export default function UnifiedCountyTile({
       
       {/* Primary Metric */}
       <div className={`p-3 rounded-lg border-2 ${colorClasses[data.color]} mb-3`}>
-        <div className={`text-2xl font-bold mb-1 ${primaryColorClasses[data.color]}`}>
-          {data.primaryValue}
-        </div>
-        <div className="text-sm text-gray-600">
-          {data.primaryLabel}
-        </div>
+        {isCompositeTile ? (
+          // Horizontal layout: value on the left, label on the right
+          <div className="flex items-center justify-between">
+            <div className={`text-2xl font-bold ${primaryColorClasses[data.color]}`}>
+              {data.primaryValue}
+            </div>
+            <div className="text-sm text-gray-600 text-right max-w-[60%]">
+              {data.primaryLabel}
+            </div>
+          </div>
+        ) : (
+          // Default vertical layout
+          <>
+            <div className={`text-2xl font-bold mb-1 ${primaryColorClasses[data.color]}`}>
+              {data.primaryValue}
+            </div>
+            <div className="text-sm text-gray-600">
+              {data.primaryLabel}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Secondary Data Grid */}
