@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useState, useLayoutEffect } from 'react';
 import { HealthcareMetrics } from '../../types/healthcare';
 import { DataLayer } from '../DataLayers/DataLayerSelector';
 import { formatMedicaidRate } from '../../utils/medicaidHelpers';
@@ -47,6 +47,7 @@ interface UnifiedCountyTileProps {
   hospital?: Hospital | null;
   currentLayer: DataLayer;
   position: { x: number; y: number } | null;
+  containerRect?: DOMRect | null;
   isFixed?: boolean;
   onClose?: () => void;
 }
@@ -56,9 +57,25 @@ export default function UnifiedCountyTile({
   hospital,
   currentLayer, 
   position, 
+  containerRect = null,
   isFixed = false, 
   onClose 
 }: UnifiedCountyTileProps) {
+  const tileRef = useRef<HTMLDivElement | null>(null);
+  const [tileSize, setTileSize] = useState<{ width: number; height: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!tileRef.current) return;
+    const el = tileRef.current;
+    const update = () => {
+      const r = el.getBoundingClientRect();
+      setTileSize({ width: Math.round(r.width), height: Math.round(r.height) });
+    };
+    update();
+    const ro = new ResizeObserver(() => update());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const { getClassification, getClassificationColor } = useCountyClassifications();
   
   // If neither county nor hospital is selected, don't render a floating tile here
@@ -390,28 +407,82 @@ export default function UnifiedCountyTile({
 
   // Position logic - hover follows cursor, fixed stays in place
   const getPositionStyle = () => {
-    if (isFixed) {
-      // Fixed positioning - stays where the user clicked
-      return {
-        position: 'fixed' as const,
-        left: position?.x ? `${position.x + 15}px` : '50%',
-        top: position?.y ? `${position.y - 10}px` : '50%',
-        transform: (!position?.x && !position?.y) ? 'translate(-50%, -50%)' : 'none',
-        zIndex: 1000
-      };
-    } else if (position) {
-      // Hover positioning - adjust if near screen edges
-      const isNearRightEdge = position.x > window.innerWidth - 350;
-      const isNearBottomEdge = position.y > window.innerHeight - 300;
-      
-      return {
-        position: 'fixed' as const,
-        left: isNearRightEdge ? position.x - 320 : position.x + 15,
-        top: isNearBottomEdge ? position.y - 280 : position.y - 10,
-        zIndex: 1000
-      };
+    // Keep the tile fully visible inside the map container by clamping to container bounds.
+    let TILE_WIDTH = tileSize?.width || 320; // measured when available
+    let TILE_HEIGHT = tileSize?.height || 300; // measured when available
+    const PADDING = 12;
+
+    if (!position) return { display: 'none' };
+
+    // Determine container bounds (fall back to viewport if none provided)
+    const rect = containerRect ?? (typeof window !== 'undefined' ? {
+      left: 0,
+      top: 0,
+      right: window.innerWidth,
+      bottom: window.innerHeight,
+      width: window.innerWidth,
+      height: window.innerHeight
+    } as DOMRect : null);
+
+    if (!rect) return { display: 'none' };
+
+    // position is relative to container, so compute absolute within viewport
+    const pointerX = (rect.left || 0) + position.x;
+    const pointerY = (rect.top || 0) + position.y;
+
+    // Prefer placing to the right and below the pointer, but if pointer is in right half prefer left placement
+    const containerWidth = rect.width || ((rect.right || 0) - (rect.left || 0));
+    let absLeft = pointerX + 15;
+    let absTop = pointerY - 10;
+
+    // If pointer is in the right half of the container, try placing to the left first
+    if (position.x > (containerWidth * 0.5)) {
+      absLeft = pointerX - TILE_WIDTH - 15;
     }
-    return { display: 'none' };
+
+    // If placing to the chosen side would overflow, flip side
+    const containerRight = (rect.left || 0) + containerWidth;
+    if (absLeft + TILE_WIDTH + PADDING > containerRight) {
+      absLeft = pointerX - TILE_WIDTH - 15;
+    }
+    if (absLeft < (rect.left || 0) + PADDING) {
+      absLeft = pointerX + 15;
+    }
+
+    // If placing below would overflow, try placing above the pointer
+    if (absTop + TILE_HEIGHT + PADDING > (rect.bottom || ((rect.top || 0) + (rect.height || 0)))) {
+      absTop = pointerY - TILE_HEIGHT - 15;
+    }
+
+    // If fixed (pinned) and no explicit coordinates, center within container
+    if (isFixed && (!position.x && !position.y)) {
+      absLeft = (rect.left || 0) + Math.round((rect.width - TILE_WIDTH) / 2);
+      absTop = (rect.top || 0) + Math.round((rect.height - TILE_HEIGHT) / 2);
+      return { position: 'fixed' as const, left: `${absLeft}px`, top: `${absTop}px`, zIndex: 1000 };
+    }
+
+    // Ensure tile fits within container: reduce tile size if container too small
+    const availableWidth = (rect.width || ((rect.right || 0) - (rect.left || 0))) - 2 * PADDING;
+    const availableHeight = (rect.height || ((rect.bottom || 0) - (rect.top || 0))) - 2 * PADDING;
+    if (TILE_WIDTH > availableWidth) TILE_WIDTH = Math.max(availableWidth, 50);
+    if (TILE_HEIGHT > availableHeight) TILE_HEIGHT = Math.max(availableHeight, 50);
+
+    // Clamp to container bounds
+    const minLeft = (rect.left || 0) + PADDING;
+    let maxLeft = (rect.left || 0) + (containerWidth) - TILE_WIDTH - PADDING;
+    const minTop = (rect.top || 0) + PADDING;
+    let maxTop = (rect.bottom || ((rect.top || 0) + (rect.height || 0))) - TILE_HEIGHT - PADDING;
+
+    // Guard against inverted ranges (tile larger than container)
+    if (maxLeft < minLeft) maxLeft = minLeft;
+    if (maxTop < minTop) maxTop = minTop;
+
+    if (absLeft < minLeft) absLeft = minLeft;
+    if (absLeft > maxLeft) absLeft = maxLeft;
+    if (absTop < minTop) absTop = minTop;
+    if (absTop > maxTop) absTop = maxTop;
+
+    return { position: 'fixed' as const, left: `${absLeft}px`, top: `${absTop}px`, zIndex: 1000 };
   };
 
   return (

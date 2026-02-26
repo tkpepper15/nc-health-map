@@ -83,6 +83,7 @@ export default function NCLeafletMap({
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const [countyGeoData, setCountyGeoData] = useState<GeoJSON.FeatureCollection | null>(null);
+  const [containerRect, setContainerRect] = useState<DOMRect | null>(null);
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [hospitalsLoading, setHospitalsLoading] = useState(false);
   const [clickPosition, setClickPosition] = useState<{ x: number; y: number } | null>(null);
@@ -191,6 +192,23 @@ export default function NCLeafletMap({
       if ((window as unknown as Record<string, unknown>).hospitalMarkersLayer) {
         (window as unknown as Record<string, unknown>).hospitalMarkersLayer = null;
       }
+    };
+  }, []);
+
+  // Track map container rect and update on resize to provide accurate bounds
+  useEffect(() => {
+    const updateRect = () => {
+      if (mapContainer.current) {
+        setContainerRect(mapContainer.current.getBoundingClientRect());
+      }
+    };
+    updateRect();
+    window.addEventListener('resize', updateRect);
+    const ro = new ResizeObserver(updateRect);
+    if (mapContainer.current) ro.observe(mapContainer.current);
+    return () => {
+      window.removeEventListener('resize', updateRect);
+      ro.disconnect();
     };
   }, []);
 
@@ -339,14 +357,26 @@ export default function NCLeafletMap({
       }
     }
 
-    return {
+    const baseStyle: any = {
       fillColor: fillColor,
       weight: currentLayer === 'hospitals' ? 0.5 : 1,
       opacity: currentLayer === 'hospitals' ? 0.3 : 1,
       color: currentLayer === 'hospitals' ? '#e5e7eb' : '#ffffff',
       fillOpacity: fillOpacity
     };
-  }, [healthcareDataMap, currentLayer, medicaidEnabled]);
+
+    // If this feature corresponds to the selected county, emphasize its border
+    if (selectedCounty && fullFips && selectedCounty.fips === fullFips) {
+      return {
+        ...baseStyle,
+        weight: 3,
+        color: '#111827', // dark border for emphasis
+        fillOpacity: Math.max(baseStyle.fillOpacity, 0.85)
+      };
+    }
+
+    return baseStyle;
+  }, [healthcareDataMap, currentLayer, medicaidEnabled, selectedCounty]);
 
   // Handle county hover with throttling to reduce performance impact
   const handleCountyHover = useCallback((e: import('leaflet').LeafletMouseEvent, feature: GeoJSON.Feature) => {
@@ -505,10 +535,13 @@ export default function NCLeafletMap({
         marker.on('click', (e: import('leaflet').LeafletMouseEvent) => {
           e.originalEvent.stopPropagation(); // Prevent county click
           if (onHospitalClick) {
-            // Capture hospital click position
+            // Capture hospital click position relative to map container
+            const rect = mapContainer.current?.getBoundingClientRect();
+            const relX = rect && e.originalEvent.clientX ? e.originalEvent.clientX - rect.left : e.originalEvent.clientX;
+            const relY = rect && e.originalEvent.clientY ? e.originalEvent.clientY - rect.top : e.originalEvent.clientY;
             setHospitalClickPosition({
-              x: e.originalEvent.clientX,
-              y: e.originalEvent.clientY
+              x: relX as number,
+              y: relY as number
             });
             onHospitalClick(hospital);
           }
@@ -645,6 +678,36 @@ export default function NCLeafletMap({
     }
   }, [mapLoaded, countyGeoData, currentLayer, addCountyLayer, addHospitalMarkers]);
 
+  // When selectedCounty changes, update styles so the selected county border stays emphasized
+  useEffect(() => {
+    if (!geoJsonLayerRef.current) return;
+
+    geoJsonLayerRef.current.eachLayer((layer: any) => {
+      const feature: GeoJSON.Feature | undefined = layer.feature;
+      if (!feature) return;
+      const properties = feature.properties || {};
+      const countyFips = properties.FIPS || properties.fips;
+      const fullFips = countyFips ? `37${countyFips.padStart(3, '0')}` : '';
+
+      if (selectedCounty && fullFips && selectedCounty.fips === fullFips) {
+        // Apply emphasized style and bring to front
+        try {
+          layer.setStyle(getCountyStyle(feature));
+          if (layer.bringToFront) layer.bringToFront();
+        } catch (err) {
+          // ignore
+        }
+      } else {
+        // Reset to computed base style
+        try {
+          geoJsonLayerRef.current.resetStyle(layer);
+        } catch (err) {
+          // ignore
+        }
+      }
+    });
+  }, [selectedCounty, getCountyStyle]);
+
   // Load hospital data when needed - optimized to prevent frequent calls
   useEffect(() => {
     let isActive = true;
@@ -740,26 +803,14 @@ export default function NCLeafletMap({
       )}
 
 
-      {/* Hover Info - Unified County Tile (follows cursor) */}
-      {!selectedCounty && !selectedHospital && hoveredCountyData && (
+      {/* Hover Info - Unified County Tile (follows cursor) - show even when a county is selected */}
+      {hoveredCountyData && (
         <UnifiedCountyTile
           county={hoveredCountyData}
           currentLayer={currentLayer}
           position={hoverPosition}
+          containerRect={containerRect}
           isFixed={false}
-        />
-      )}
-      
-      {/* Selected County Tile with connector (floating) */}
-      {selectedCounty && selectedCountyData && clickPosition && (
-        <ConnectedTile
-          county={selectedCountyData}
-          currentLayer={currentLayer}
-          onClose={() => {
-            onCountyClick(null);
-            setClickPosition(null);
-          }}
-          sourcePoint={clickPosition}
         />
       )}
       
@@ -769,6 +820,7 @@ export default function NCLeafletMap({
           hospital={selectedHospital}
           currentLayer={currentLayer}
           position={hospitalClickPosition}
+          containerRect={containerRect}
           isFixed={true}
           onClose={() => {
             onHospitalClick(null);

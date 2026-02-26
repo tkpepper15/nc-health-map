@@ -3,6 +3,10 @@ import { getHealthcareData } from '../../utils/database';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { HealthcareMetrics } from '../../types/healthcare';
+import { convertToCSV } from '../../lib/csvUtils';
+
+// Cache stable county data for 5 min at the CDN/edge; serve stale for up to 10 min.
+const CACHE_HEADERS = { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' };
 
 /**
  * Healthcare Data API Route
@@ -87,7 +91,7 @@ export async function GET(request: NextRequest) {
         server_info: {
           environment: process.env.NODE_ENV,
           is_vercel: !!process.env.VERCEL,
-          supabase_configured: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+          supabase_configured: !!process.env.SUPABASE_URL,
           api_endpoint: process.env.NEXT_PUBLIC_API_URL || '/api',
           server_region: process.env.VERCEL_REGION || 'local'
         },
@@ -106,11 +110,11 @@ export async function GET(request: NextRequest) {
       });
     }
     
-    return NextResponse.json(response);
-    
+    return NextResponse.json(response, { headers: CACHE_HEADERS });
+
   } catch (error) {
     console.error('Failed to serve healthcare data:', error);
-    
+
     return NextResponse.json({
       error: 'Failed to load healthcare data',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -118,38 +122,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Helper function to get vulnerability colors
 function getVulnerabilityColor(category: string): string {
-  const colors = {
-    'low': '#2E8B57',      // Sea Green
-    'moderate': '#FFA500', // Orange  
-    'high': '#FF6347',     // Tomato
-    'extreme': '#DC143C'   // Crimson
+  const colors: Record<string, string> = {
+    low: '#2E8B57',
+    moderate: '#FFA500',
+    high: '#FF6347',
+    extreme: '#DC143C',
   };
-  
-  return colors[category as keyof typeof colors] || '#e5e7eb';
-}
-
-// Convert data to CSV format
-function convertToCSV(data: HealthcareMetrics[] | Record<string, unknown>[]): string {
-  if (!data || data.length === 0) {
-    return 'No data available';
-  }
-  
-  const headers = Object.keys(data[0]);
-  const csvRows = [headers.join(',')];
-  
-  for (const row of data) {
-    const values = headers.map(header => {
-      const value = (row as Record<string, unknown>)[header];
-      // Escape commas and quotes in CSV
-      if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-        return `"${value.replace(/"/g, '""')}"`;
-      }
-      return value ?? '';
-    });
-    csvRows.push(values.join(','));
-  }
-  
-  return csvRows.join('\n');
+  return colors[category] ?? '#e5e7eb';
 }

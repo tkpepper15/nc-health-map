@@ -99,14 +99,9 @@ export async function getHospitalData(countyFips?: string): Promise<{ data: Hosp
   }
 }
 
-// Helper function to get vulnerability colors
 function getVulnerabilityColor(category: string): string {
-  const colors = {
-    'low': '#2E8B57',      // Sea Green
-    'moderate': '#FFA500', // Orange  
-    'high': '#FF6347',     // Tomato
-    'extreme': '#DC143C'   // Crimson
-  }
-  
-  return colors[category as keyof typeof colors] || '#e5e7eb'
+  const colors: Record<string, string> = {
+    low: '#2E8B57', moderate: '#FFA500', high: '#FF6347', extreme: '#DC143C',
+  };
+  return colors[category] ?? '#e5e7eb';
 }

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getHospitalData } from '../../utils/database';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { convertToCSV } from '../../lib/csvUtils';
+
+const CACHE_HEADERS = { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' };
 
 /**
  * Hospital Data API Route
@@ -124,7 +127,7 @@ export async function GET(request: NextRequest) {
         server_info: {
           environment: process.env.NODE_ENV,
           is_vercel: !!process.env.VERCEL,
-          supabase_configured: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+          supabase_configured: !!process.env.SUPABASE_URL,
           api_endpoint: process.env.NEXT_PUBLIC_API_URL || '/api',
           server_region: process.env.VERCEL_REGION || 'local'
         },
@@ -143,38 +146,14 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, { headers: CACHE_HEADERS });
 
   } catch (error) {
     console.error('Failed to serve hospital data:', error);
-    
+
     return NextResponse.json({
       error: 'Failed to load hospital data',
       message: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
-}
-
-// Convert data to CSV format
-function convertToCSV(data: Record<string, unknown>[]): string {
-  if (!data || data.length === 0) {
-    return 'No data available';
-  }
-  
-  const headers = Object.keys(data[0]);
-  const csvRows = [headers.join(',')];
-  
-  for (const row of data) {
-    const values = headers.map(header => {
-      const value = row[header];
-      // Escape commas and quotes in CSV
-      if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-        return `"${value.replace(/"/g, '""')}"`;
-      }
-      return value ?? '';
-    });
-    csvRows.push(values.join(','));
-  }
-  
-  return csvRows.join('\n');
 }

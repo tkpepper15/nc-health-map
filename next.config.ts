@@ -2,6 +2,15 @@ import type { NextConfig } from "next";
 
 // Configuration to fix webpack hashing issues
 const nextConfig: NextConfig = {
+  async rewrites() {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
+    return [
+      {
+        source: '/api/v1/:path*',
+        destination: `${backendUrl}/api/v1/:path*`,
+      },
+    ];
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

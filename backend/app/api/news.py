@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, HttpUrl
 import httpx
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from ..core.config import Settings
 from ..core.deps import get_settings
 
@@ -46,7 +46,7 @@ async def fetch_news_for_county(county_name: str, settings: Settings, state: str
     """Fetch more relevant healthcare news for a specific NC county using stricter queries."""
     async with httpx.AsyncClient(timeout=15.0) as client:
         base_url = "https://newsapi.org/v2/everything"
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         from_date = (now - timedelta(days=30)).strftime("%Y-%m-%d")
 
         # Focused healthcare keyword groups
@@ -116,7 +116,7 @@ async def fetch_news_for_nearby_counties(county_name: str, settings: Settings, s
     neighbors = nearby_map.get(county_name, [])
     async with httpx.AsyncClient(timeout=15.0) as client:
         base_url = "https://newsapi.org/v2/everything"
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         from_date = (now - timedelta(days=30)).strftime("%Y-%m-%d")
 
         keyword_groups = [
@@ -205,7 +205,66 @@ async def fetch_news_for_nearby_counties(county_name: str, settings: Settings, s
         return filter_and_sort_articles(articles)
 
 
-# --- Route ---
+# --- Route: State-level news ---
+@router.get("/state", response_model=List[NewsArticle])
+async def get_state_news(
+    settings: Settings = Depends(get_settings)
+):
+    """Get statewide NC healthcare news."""
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        base_url = "https://newsapi.org/v2/everything"
+        now = datetime.now(timezone.utc)
+        from_date = (now - timedelta(days=30)).strftime("%Y-%m-%d")
+
+        keyword_groups = [
+            "North Carolina hospital",
+            "North Carolina Medicaid",
+            "North Carolina public health",
+            "NC healthcare",
+        ]
+
+        articles: List[NewsArticle] = []
+
+        for kw in keyword_groups:
+            params = {
+                "q": kw,
+                "apiKey": settings.NEWS_API_KEY,
+                "language": "en",
+                "sortBy": "publishedAt",
+                "from": from_date,
+                "pageSize": 5,
+            }
+
+            try:
+                print(f"Query (state): {kw}")
+                resp = await client.get(base_url, params=params)
+                resp.raise_for_status()
+                data = resp.json()
+                for article in data.get("articles", []):
+                    articles.append(
+                        NewsArticle(
+                            title=article.get("title", ""),
+                            url=article.get("url", ""),
+                            source=(article.get("source") or {}).get("name", ""),
+                            published_at=article.get("publishedAt", ""),
+                            description=article.get("description"),
+                            image_url=article.get("urlToImage")
+                        )
+                    )
+            except Exception as e:
+                print(f"Error fetching state news ({kw}): {e}")
+                continue
+
+    if not articles:
+        raise HTTPException(
+            status_code=404,
+            detail="No statewide healthcare news found"
+        )
+
+    return filter_and_sort_articles(articles)
+
+
+# --- Route: County-level news ---
 @router.get("/{county}", response_model=List[NewsArticle])
 async def get_county_news(
     county: str,

@@ -1,17 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useHealthcareStore } from '../../utils/store';
 
-export default function ChatBox() {
+export default function ChatBox({ countyName }: { countyName: string | null }) {
   const [message, setMessage] = useState('');
-  const { selectedCounty } = useHealthcareStore();
   const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'assistant', content: string }>>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || !selectedCounty) return;
+    if (!message.trim()) return;
 
     // Add user message to chat
     const userMessage = { role: 'user' as const, content: message };
@@ -20,7 +18,6 @@ export default function ChatBox() {
     setIsLoading(true);
 
     try {
-      // TODO: Replace with actual API call to HuggingFace or similar
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -28,21 +25,22 @@ export default function ChatBox() {
         },
         body: JSON.stringify({
           message,
-          county: selectedCounty,
+          county: countyName,
         }),
       });
 
+      const data = await response.json();
       if (!response.ok) {
-        throw new Error('Failed to get response');
+        throw new Error(data.error || 'Failed to get response');
       }
 
-      const data = await response.json();
       setChatHistory(prev => [...prev, { role: 'assistant', content: data.response }]);
     } catch (error) {
       console.error('Chat error:', error);
+      const msg = error instanceof Error ? error.message : 'Unknown error';
       setChatHistory(prev => [
         ...prev,
-        { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }
+        { role: 'assistant', content: `Error: ${msg}` }
       ]);
     } finally {
       setIsLoading(false);
@@ -50,23 +48,23 @@ export default function ChatBox() {
   };
 
   return (
-    <div className="bg-gray-50 rounded-lg p-4">
-      <h3 className="text-sm font-medium text-gray-700 mb-3">
+    <div className="bg-white rounded-lg p-4 flex flex-col h-full">
+      <h3 className="text-sm font-semibold text-gray-900 mb-3">
         Ask about healthcare in this county
       </h3>
 
-      {/* Chat History */}
-      <div className="h-48 overflow-y-auto mb-4 space-y-3">
+      {/* Chat History - grows and scrolls */}
+      <div className="flex-1 min-h-0 overflow-y-auto mb-4 space-y-3">
         {chatHistory.map((chat, index) => (
           <div
             key={index}
-            className={`p-2 rounded-lg ${
+            className={`p-3 rounded-lg text-sm text-gray-900 leading-relaxed whitespace-pre-wrap ${
               chat.role === 'user'
-                ? 'bg-blue-100 ml-4'
-                : 'bg-white mr-4 border border-gray-200'
+                ? 'bg-blue-600 text-white ml-6'
+                : 'bg-gray-100 mr-6 border border-gray-200'
             }`}
           >
-            <p className="text-sm">{chat.content}</p>
+            {chat.content}
           </div>
         ))}
         {isLoading && (
@@ -78,14 +76,14 @@ export default function ChatBox() {
         )}
       </div>
 
-      {/* Chat Input */}
-      <form onSubmit={handleSubmit} className="flex space-x-2">
+      {/* Chat Input - anchored to bottom via flex column layout */}
+      <form onSubmit={handleSubmit} className="flex space-x-2 mt-auto">
         <input
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Type your question..."
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-400 bg-white"
           disabled={isLoading}
         />
         <button

@@ -70,7 +70,7 @@ export default function BackendStatusIndicator() {
       endpoint = typeof window !== 'undefined' ? window.location.hostname : 'vercel.app'
     } else if (metadata.source === 'database' && !metadata.fallback_reason) {
       server = 'supabase'
-      endpoint = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '') || 'supabase.co'
+      endpoint = 'supabase.co'
     } else {
       server = 'local'
       endpoint = typeof window !== 'undefined' 
