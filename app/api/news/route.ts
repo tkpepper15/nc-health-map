@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const NEWS_API_BASE = 'https://newsapi.org/v2/everything';
-const NC_DOMAINS = 'wral.com,newsobserver.com,wsoctv.com,wbtv.com,abc11.com,npr.org,wect.com';
+const NC_DOMAINS = 'wral.com,newsobserver.com,wsoctv.com,wbtv.com,abc11.com,npr.org,wect.com,wunc.org,ncdhhs.gov,charlotteobserver.com,heraldsun.com';
 
 interface RawArticle {
   title?: string;
@@ -50,7 +50,7 @@ function filterAndSort(articles: NewsArticle[]): NewsArticle[] {
   return unique.sort((a, b) => b.published_at.localeCompare(a.published_at)).slice(0, 10);
 }
 
-async function fetchArticles(queries: string[]): Promise<NewsArticle[]> {
+async function fetchArticles(queries: string[], useDomains = false): Promise<NewsArticle[]> {
   const apiKey = process.env.NEWS_API_KEY;
   if (!apiKey) return [];
 
@@ -59,16 +59,16 @@ async function fetchArticles(queries: string[]): Promise<NewsArticle[]> {
 
   for (const q of queries) {
     try {
-      const params = new URLSearchParams({
+      const params: Record<string, string> = {
         q,
         apiKey,
         language: 'en',
         sortBy: 'relevancy',
         from,
-        pageSize: '5',
-        domains: NC_DOMAINS,
-      });
-      const res = await fetch(`${NEWS_API_BASE}?${params}`);
+        pageSize: '10',
+      };
+      if (useDomains) params.domains = NC_DOMAINS;
+      const res = await fetch(`${NEWS_API_BASE}?${new URLSearchParams(params)}`);
       if (!res.ok) continue;
       const data = await res.json();
       for (const a of (data.articles ?? []) as RawArticle[]) {
@@ -88,13 +88,14 @@ export async function GET(request: NextRequest) {
   let articles: NewsArticle[];
 
   if (county) {
-    // County-level queries
+    // County-level: no domain restriction so local/niche outlets are included
     const countyQueries = [
-      `"${county} County" hospital OR clinic OR "health department"`,
-      `"${county} County" Medicaid OR "public health" OR "healthcare access"`,
-      `"${county}, NC" health OR medical OR care`,
+      `"${county} County" "North Carolina" hospital OR clinic OR "health department"`,
+      `"${county} County" NC Medicaid OR "public health" OR healthcare`,
+      `"${county}, NC" health OR medical OR hospital`,
+      `"${county} County" NC health`,
     ];
-    articles = filterAndSort(await fetchArticles(countyQueries));
+    articles = filterAndSort(await fetchArticles(countyQueries, false));
 
     // Fallback to state news if nothing county-specific
     if (articles.length === 0) {
@@ -102,17 +103,17 @@ export async function GET(request: NextRequest) {
         '"North Carolina" hospital OR Medicaid OR "public health"',
         '"North Carolina" healthcare OR "rural health"',
       ];
-      articles = filterAndSort(await fetchArticles(stateQueries));
+      articles = filterAndSort(await fetchArticles(stateQueries, false));
     }
   } else {
-    // State-level queries
+    // State-level: prefer NC news outlets
     const stateQueries = [
       '"North Carolina" hospital',
       '"North Carolina" Medicaid',
       '"North Carolina" "public health"',
       'NC healthcare "rural hospital"',
     ];
-    articles = filterAndSort(await fetchArticles(stateQueries));
+    articles = filterAndSort(await fetchArticles(stateQueries, true));
   }
 
   return NextResponse.json(articles);
