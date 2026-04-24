@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useHealthcareStore } from '../../utils/store';
 import ChatBox from '../ChatBox/ChatBox';
-import { HiX } from 'react-icons/hi';
 
 interface NewsArticle {
   title: string;
@@ -15,28 +14,12 @@ interface NewsArticle {
 }
 
 export default function Sidebar() {
-  const { selectedCounty, setSidebarOpen } = useHealthcareStore();
+  const { selectedCounty } = useHealthcareStore();
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [countyName, setCountyName] = useState<string | null>(null);
-
-  const stateMetrics = {
-    medicaidEnrollment: {
-      rate: 27.1,
-      total: "2.85M"
-    },
-    hcvi: {
-      score: 5.2,
-      category: "Moderate Risk"
-    },
-    overview: {
-      counties: 100,
-      population: "10.5M",
-      hospitals: 85
-    }
-  };
 
   // Get county name from FIPS code
   useEffect(() => {
@@ -162,10 +145,8 @@ export default function Sidebar() {
       </div>
 
       {/* Right column: Chat (50%) */}
-      <div className="w-1/2 h-screen bg-gray-50 p-6 overflow-hidden">
-        <div className="h-full flex flex-col">
-          <ChatBox countyName={countyName} />
-        </div>
+      <div className="w-1/2 h-screen bg-gray-50 p-6 overflow-y-auto">
+        <ChatBox countyName={countyName} />
       </div>
     </div>
   );

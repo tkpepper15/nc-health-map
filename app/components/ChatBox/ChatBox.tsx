@@ -48,7 +48,7 @@ export default function ChatBox({ countyName }: { countyName: string | null }) {
   };
 
   return (
-    <div className="bg-white rounded-lg p-4 flex flex-col h-full">
+    <div className="bg-white border border-gray-200 rounded-lg p-4 flex flex-col h-[500px]">
       <h3 className="text-sm font-semibold text-gray-900 mb-3">
         Ask about healthcare in this county
       </h3>
